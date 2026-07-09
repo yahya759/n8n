@@ -1,0 +1,810 @@
+{
+  "id": "Ip3QAvO1twyUeOGK",
+  "name": "Global Error Handler",
+  "active": false,
+  "isArchived": false,
+  "versionId": "e07b1dd1-ad0b-4c59-bf5a-a35820729588",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "createdAt": "2026-07-06T09:33:34.565Z",
+  "updatedAt": "2026-07-06T10:17:18.095Z",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "connections": {
+    "Parse hireaprogrammer": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword Filter": {
+      "main": [
+        [
+          {
+            "node": "AI Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Classification": {
+      "main": [
+        [
+          {
+            "node": "AI Response Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Response Filter": {
+      "main": [
+        [
+          {
+            "node": "Format Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Fields": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Parse hireaprogrammer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP marketing1": {
+      "main": [
+        [
+          {
+            "node": "Parse marketing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP startup1": {
+      "main": [
+        [
+          {
+            "node": "Parse startup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP marketing1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP startup1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Keyword Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse startup": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Parse marketing": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Format Error Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Data": {
+      "main": [
+        [
+          {
+            "node": "Notify on Telegram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const posts = items[0].json.data.children;\nreturn posts.map(post => {\n  const data = post.data;\n  return {\n    json: {\n      title: data.title,\n      content: data.selftext || '',\n      url: `https://reddit.com${data.permalink}`,\n      subreddit: data.subreddit,\n      author: data.author,\n      date: new Date(data.created_utc * 1000).toISOString()\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        1008
+      ],
+      "id": "3f190661-7f05-45c8-9564-fb965fd981d6",
+      "name": "Parse hireaprogrammer"
+    },
+    {
+      "parameters": {
+        "jsCode": "const posts = items[0].json.data.children;\nreturn posts.map(post => {\n  const data = post.data;\n  return {\n    json: {\n      title: data.title,\n      content: data.selftext || '',\n      url: `https://reddit.com${data.permalink}`,\n      subreddit: data.subreddit,\n      author: data.author,\n      date: new Date(data.created_utc * 1000).toISOString()\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        1216
+      ],
+      "id": "05057da4-ab22-4863-a229-f4279abde9a2",
+      "name": "Parse marketing"
+    },
+    {
+      "parameters": {
+        "jsCode": "const posts = items[0].json.data.children;\nreturn posts.map(post => {\n  const data = post.data;\n  return {\n    json: {\n      title: data.title,\n      content: data.selftext || '',\n      url: `https://reddit.com${data.permalink}`,\n      subreddit: data.subreddit,\n      author: data.author,\n      date: new Date(data.created_utc * 1000).toISOString()\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        1392
+      ],
+      "id": "86520181-1cea-4807-a57e-94c8e8fe8cf0",
+      "name": "Parse startup"
+    },
+    {
+      "parameters": {
+        "jsCode": "const keywords = [\n  \"need help\",\n  \"looking for\",\n  \"recommend an agency\",\n  \"hire developer\",\n  \"anyone know someone\",\n  \"seeking\",\n  \"need someone\",\n  \"require assistance\",\n  \"looking to hire\",\n  \"need a developer\",\n  \"need a designer\",\n  \"need marketing help\"\n];\n\nreturn items\n  .map(item => {\n    const text = (item.json.title + ' ' + item.json.content).toLowerCase();\n\n    const matchedKeywords = keywords.filter(k => text.includes(k));\n    \n    if (matchedKeywords.length > 0) {\n      item.json.intentMatched = matchedKeywords.join(\", \");\n      return item;\n    }\n    \n    return null;\n  })\n  .filter(item => item !== null);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        1200
+      ],
+      "id": "b1464639-239c-477e-8b90-c443d112688a",
+      "name": "Keyword Filter"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-1.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-1.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Analyze this Reddit post and determine if the user is genuinely seeking help, services, or looking to hire someone. Consider both the title and content. Respond with only 'YES' or 'NO'.\nTitle: {{ $json.title }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        1200
+      ],
+      "id": "7683ae30-8128-4513-8479-a2ee6f7f4cc9",
+      "name": "AI Classification",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c5c3e3d4-9b4a-4f89-8b2f-1a2b3c4d5e6f",
+              "leftValue": "={{ $json.content.parts[0].text }}",
+              "rightValue": "=YES\\n",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        1216
+      ],
+      "id": "b02f1651-8612-4174-a3de-29af2db84c2b",
+      "name": "AI Response Filter",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fc18205c-52b5-4e29-be89-0c4582a5c842",
+              "name": "Post Title",
+              "value": "={{ $('Keyword Filter').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "8301f691-5573-49e1-9878-9d0c5a4f689d",
+              "name": "Post URL",
+              "value": "={{ $('Keyword Filter').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "fbf961be-b60d-42de-b1ff-3c76da831067",
+              "name": "Subreddit",
+              "value": "={{ $('Keyword Filter').item.json.subreddit }}",
+              "type": "string"
+            },
+            {
+              "id": "088ef7ca-514b-4240-ba83-1827cc7933ea",
+              "name": "Author",
+              "value": "={{ $('Keyword Filter').item.json.author }}",
+              "type": "string"
+            },
+            {
+              "id": "25a4853d-f42c-488c-8f24-e5ed65292578",
+              "name": "Date Posted",
+              "value": "={{ $('Keyword Filter').item.json.date }}",
+              "type": "string"
+            },
+            {
+              "id": "6aba2001-2131-4587-bc45-a9a37a0e268b",
+              "name": "Intent Matched",
+              "value": "={{ $('Keyword Filter').item.json.intentMatched }}",
+              "type": "string"
+            },
+            {
+              "id": "40c55cc8-b3c4-4004-a8b1-904878eee33c",
+              "name": "Notes",
+              "value": "={{ $('Keyword Filter').item.json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "61fa1149-fdb4-450f-b4e9-6adcf23c6169",
+              "name": "AI Verified",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1760,
+        1168
+      ],
+      "id": "5a9d3c5b-90c1-4878-bcf4-7480cceb35d2",
+      "name": "Format Fields"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1bCNSc4rQtiVjDHtUCUZEn0uzF0gR5wKhuuc-NTu90ug",
+          "mode": "list",
+          "cachedResultName": "Reddit Lead Generation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bCNSc4rQtiVjDHtUCUZEn0uzF0gR5wKhuuc-NTu90ug/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bCNSc4rQtiVjDHtUCUZEn0uzF0gR5wKhuuc-NTu90ug/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Post URL": "={{ $json[\"Post URL\"] }}",
+            "Subreddit": "={{ $json.Subreddit }}",
+            "Author": "={{ $json.Author }}",
+            "Date Posted": "={{ $json[\"Date Posted\"] }}",
+            "Intent Matched": "={{ $json[\"Intent Matched\"] }}",
+            "Notes": "={{ $json.Notes }}",
+            "Post Title ": "={{ $json['Post Title'] }}"
+          },
+          "matchingColumns": [
+            "Post Title "
+          ],
+          "schema": [
+            {
+              "id": "Post Title ",
+              "displayName": "Post Title ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post URL",
+              "displayName": "Post URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subreddit",
+              "displayName": "Subreddit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Author",
+              "displayName": "Author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date Posted",
+              "displayName": "Date Posted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Intent Matched",
+              "displayName": "Intent Matched",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1984,
+        1216
+      ],
+      "id": "6cca13e6-eb51-44a8-a12f-b7894398abb7",
+      "name": "Save to Google Sheets"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -288,
+        1200
+      ],
+      "id": "b68ed2e7-eaa5-438a-8376-d4f9ad37d19d",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "url": "https://oauth.reddit.com/r/hireaprogrammer/new",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "redditOAuth2Api",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 10
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        1008
+      ],
+      "id": "62fa661f-cc6f-4859-ba6c-2ffd052a0206",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "url": "https://oauth.reddit.com/r/marketing/new",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "redditOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        1200
+      ],
+      "id": "97a5f8cc-8b9c-41a8-8f26-67ef6c85f46c",
+      "name": "HTTP marketing1"
+    },
+    {
+      "parameters": {
+        "url": "https://oauth.reddit.com/r/startup/new",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "redditOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        1392
+      ],
+      "id": "a0aca95b-6e2b-42af-93dc-5544208b1e36",
+      "name": "HTTP startup1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        1200
+      ],
+      "id": "aa11f094-8371-4e33-a50b-42005c3aff00",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        608,
+        1184
+      ],
+      "id": "c029af32-5f38-4b34-8375-2a61274d5a04",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "content": "## Reddit Lead Generator — شرح كامل للمشروع\n\n### الهدف\nالفلو بيدوّر أوتوماتيكيًا على منشورات Reddit من ناس بيدوروا على مساعدة/خدمة/توظيف (عملاء محتملين)، بيصنّفهم بالذكاء الصناعي، وبيحفظ اللي مؤهلين منهم بجوجل شيتس — كل هاد بدون أي تدخل يدوي.\n\n---\n\n### 1) التريغر\n**Schedule Trigger1** بيشتغل كل ساعة أوتوماتيك، بلا حاجة لحدا يشغّل الفلو يدويًا.\n\n### 2) جلب البوستات\nبعد الـ No Operation (مجرد نقطة تفريع)، الفلو بيبعت 3 طلبات HTTP متوازية عبر Reddit API (OAuth2) لجلب أحدث البوستات من:\n- r/hireaprogrammer\n- r/marketing\n- r/startup\n\nكل مصدر عندو Code node مخصص (Parse hireaprogrammer / Parse marketing / Parse startup) بيحوّل رد Reddit الخام لصيغة نظيفة: العنوان، المحتوى، الرابط، اسم السابريديت، الكاتب، والتاريخ.\n\n### 3) الدمج\n**Merge1** بيجمع نتائج الـ 3 مصادر بقائمة واحدة موحّدة.\n\n### 4) الفلترة الأولى — كلمات مفتاحية\n**Keyword Filter** بيفحص كل بوست (العنوان + المحتوى) مقابل 12 عبارة بتدل على نية طلب مساعدة، متل:\n\"need help\"، \"looking for\"، \"hire developer\"، \"seeking\"، \"need a developer\"، \"need marketing help\"...\n\nأي بوست ما فيه ولا وحدة من هاي العبارات بينرفض فورًا. هاي الخطوة بتوفر تكلفة استدعاءات الذكاء الصناعي — ما بيوصلها إلا البوستات يلي عندها احتمال حقيقي.\n\n### 5) الفلترة الذكية — تصنيف بالذكاء الصناعي\n**AI Classification** (Google Gemini 1.5 Flash) بياخد كل بوست ناجي من الفلترة الأولى، وبيسأل الموديل: \"هل الشخص فعليًا بيدور مساعدة أو خدمة أو توظيف؟\" ورده لازم يكون YES أو NO بس. هاي الخطوة بتفلتر البوستات يلي فيها الكلمة المفتاحية بس مش بمعناها الصحيح (مثلاً حدا بيحكي عن تجربة قديمة مش طلب فعلي).\n\n### 6) التحقق من الرد\n**AI Response Filter** بيتأكد فعليًا إنو رد الموديل يحتوي \"YES\" قبل ما يكمل — حماية إضافية بعد خطوة الـ AI.\n\n### 7) تجهيز البيانات\n**Format Fields** بيبني صف كامل ومنظم فيه: عنوان البوست، الرابط، السابريديت، الكاتب، تاريخ النشر، الكلمات يلي طابقت، ملاحظات (نص البوست الكامل)، وتأكيد الذكاء الصناعي.\n\n### 8) الحفظ النهائي\n**Save to Google Sheets** بيحفظ الصف بـ Google Sheet اسمو \"Reddit Lead Generation\"، وبيستخدم عملية appendOrUpdate يلي بتطابق على عنوان البوست — يعني لو نفس البوست ظهر مرتين (لأن الفلو بيشتغل كل ساعة) ما بينكرر، بس بيحدّث نفس الصف.\n\n---\n\n### النتيجة العملية\nكل ساعة، صاحب المشروع بيلاقي بجدول Google Sheets قائمة محدّثة بأشخاص حقيقيين عم يدوروا فعليًا على مساعدة أو خدمة أو توظيف على Reddit — جاهزين يتواصل معهم كـ Leads، بدون ما يدوّر يدويًا على المنشورات.\n\n### ملاحظة للتوسعة\nممكن تضاف subreddits إضافية بنفس الطريقة: HTTP Request جديد لكل سابريديت + توصيلو بالـ Merge (لازم تزيد عدد الـ inputs بالـ Merge حسب عدد المصادر).",
+        "height": 1536,
+        "width": 1248
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1568,
+        464
+      ],
+      "typeVersion": 1,
+      "id": "147eaab1-9d52-4dc1-aec9-63330b113194",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        624,
+        2032
+      ],
+      "id": "d747002a-614c-47e9-81ab-66b8f69ad8c3",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1a1b2c3-0002-4a1a-9000-000000000002",
+              "name": "workflowName",
+              "value": "={{ $json.workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "f1a1b2c3-0003-4a1a-9000-000000000003",
+              "name": "failedNode",
+              "value": "={{ $json.execution.lastNodeExecuted }}",
+              "type": "string"
+            },
+            {
+              "id": "f1a1b2c3-0004-4a1a-9000-000000000004",
+              "name": "errorMessage",
+              "value": "={{ $json.execution.error?.message || $json.error?.message || 'Unknown error' }}",
+              "type": "string"
+            },
+            {
+              "id": "f1a1b2c3-0005-4a1a-9000-000000000005",
+              "name": "executionUrl",
+              "value": "={{ $json.execution.url }}",
+              "type": "string"
+            },
+            {
+              "id": "f1a1b2c3-0006-4a1a-9000-000000000006",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "f1a1b2c3-0007-4a1a-9000-000000000007",
+              "name": "telegramText",
+              "value": "=🔴 *فشل فلو*\n\n*الفلو:* {{ $json.workflow.name }}\n*النود يلي فشل:* {{ $json.execution.lastNodeExecuted }}\n*الخطأ:* {{ $json.execution.error?.message || $json.error?.message || 'Unknown error' }}\n\n[افتح التفاصيل]({{ $json.execution.url }})",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        848,
+        2032
+      ],
+      "id": "3a50b831-d573-426c-aeff-5bbde7e052f6",
+      "name": "Format Error Data"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.telegramText }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1104,
+        1920
+      ],
+      "id": "f064c472-98d7-4ef6-8af0-f07adda73dc9",
+      "name": "Notify on Telegram",
+      "webhookId": "4fd287fd-7bfd-417a-8f85-7de7d80d3be6"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.timestamp }}",
+            "Workflow": "={{ $json.workflowName }}",
+            "Failed Node": "={{ $json.failedNode }}",
+            "Error Message": "={{ $json.errorMessage }}",
+            "Execution URL": "={{ $json.executionUrl }}"
+          },
+          "matchingColumns": [
+            "Timestamp"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Workflow",
+              "displayName": "Workflow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Failed Node",
+              "displayName": "Failed Node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Error Message",
+              "displayName": "Error Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Execution URL",
+              "displayName": "Execution URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1104,
+        2144
+      ],
+      "id": "c38b2e92-d78c-47fe-95f7-2e921d210ccd",
+      "name": "Log to Google Sheets"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [],
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "parentFolderId": null,
+  "scopes": [
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true
+}

@@ -1,0 +1,664 @@
+{
+  "id": "nVbQ2T7I4UQrtiIe",
+  "name": "Restaurant Booking",
+  "active": false,
+  "isArchived": false,
+  "versionId": "8ba1c735-fc90-4775-9f64-6247136bc515",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "createdAt": "2026-07-05T07:15:33.466Z",
+  "updatedAt": "2026-07-06T09:27:59.772Z",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "connections": {
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Booking Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booking Agent": {
+      "main": [
+        [
+          {
+            "node": "Google Calendar",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Information Gathering Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Telegram3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Information Gathering Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Information Gathering Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Booking Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Gathering Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Gathering Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Booking Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Error Notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "fe3149b1-c683-4284-9e88-f4e8f56c3283",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        1328,
+        400
+      ],
+      "webhookId": "5ef30342-f837-4e97-9b60-1ee3493279c3",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "188a1432-68e8-48c0-99af-6804b4e0e933",
+      "name": "Auto-fixing Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "position": [
+        1712,
+        640
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"is_pass_next\": \"boolean\",\n\t\"message\": \"string\"\n}"
+      },
+      "id": "c9d402f1-05f5-4b7b-a2ff-b7c9e37cf5a0",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1824,
+        832
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "b27f50ed-f26d-4310-b049-f0b38ca069f6",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.output.is_pass_next }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Booking"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "ca6f2ea1-9dd1-4e77-9935-c3dbeb872ee4",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.output.is_pass_next }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Feedback"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0238b2a4-c854-4af5-9b51-2a7c2e6f007e",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        2032,
+        416
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('Information Gathering Agent').item.json.output.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "955ed7c6-cc8c-43fb-b8f8-ea7b73055ce1",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        2272,
+        512
+      ],
+      "webhookId": "2fa48c6e-1086-43b3-b35c-89d17e69cf7b",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "34357e62-87db-4d9c-a4ac-b8008c944821",
+              "name": "user_data",
+              "type": "string",
+              "value": "={{$('Switch').item.json.output.message}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0f81044a-8d20-474d-b74b-181d4361d2d6",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2480,
+        400
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "yhea23112003@gmail.com",
+          "mode": "list",
+          "cachedResultName": "yhea23112003@gmail.com"
+        },
+        "start": "={{ $json.output.calendar_event.start_time }}",
+        "end": "={{ $json.output.calendar_event.end_time }}",
+        "useDefaultReminders": false,
+        "additionalFields": {
+          "attendees": [
+            "={{ $json.output.email.to }}"
+          ],
+          "color": "7",
+          "summary": "={{ $json.output.email.description }}"
+        }
+      },
+      "id": "97055164-6612-4e3e-936b-dd62cbedcf5c",
+      "name": "Google Calendar",
+      "type": "n8n-nodes-base.googleCalendar",
+      "position": [
+        3152,
+        352
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Booking Agent for Gourmet Dining – A Fine Culinary Experience.\nYour job is to take finalized booking details from the Restaurant Agent, and:\n\nGenerate a Google Calendar event object with proper start and end time.\n\nGenerate a confirmation email, including:\n\nRecipient email address\n\nEmail subject line\n\nA professional and beautifully formatted HTML body\n\nInput from Restaurant Agent:  {{ $('Edit Fields').item.json['user_data'] }}\n\n✅ Your OUTPUT must be in this structure:\n\n{\n  \"calendar_event\": {\n    \"start_time\": \"2025-05-10T14:00:00\",\n    \"end_time\": \"2025-05-10T17:00:00\",\n    \"name\": \"Sarah Johnson\"\n  },\n  \"email\": {\n    \"to\": \"sarah@example.com\",\n    \"subject\": \"Your Gourmet Dining Reservation Confirmation 🍽️\",\n    \"html_body\": \"<html>... (full email HTML below) ...</html>\", \n    \"description\": \"Booking with Sarah\"\n  },\n}\n\nEXAMPLE: \n<html>\n  <body style=\"font-family: Arial, sans-serif; color: #333;\">\n    <h2 style=\"color: #B22222;\">🍷 Gourmet Dining – Reservation Confirmed</h2>\n    <p>Dear Sarah Johnson,</p>\n    <p>We are delighted to confirm your dinner reservation with us!</p>\n    <table style=\"margin-top: 15px; border-collapse: collapse;\">\n      <tr>\n        <td><strong>Date:</strong></td>\n        <td>May 10, 2025</td>\n      </tr>\n      <tr>\n        <td><strong>Time:</strong></td>\n        <td>7:00 PM – 9:00 PM</td>\n      </tr>\n      <tr>\n        <td><strong>Guests:</strong></td>\n        <td>4</td>\n      </tr>\n      <tr>\n        <td><strong>Dining Preference:</strong></td>\n        <td>Outdoor Terrace</td>\n      </tr>\n      <tr>\n        <td><strong>Location:</strong></td>\n        <td>45 Culinary Avenue, Foodie City</td>\n      </tr>\n    </table>\n    <p style=\"margin-top: 15px;\">📝 <strong>Special Notes:</strong> Anniversary dinner – vegetarian-friendly menu requested.</p>\n    <p>We look forward to hosting you for an unforgettable dining experience. ✨</p>\n    <p style=\"margin-top: 25px;\">Warm regards,<br/>The Gourmet Dining Team</p>\n    <hr style=\"margin-top: 30px;\">\n    <p style=\"font-size: 12px;\">Questions? Contact us at <a href='mailto:reservations@gourmetdining.com'>reservations@gourmetdining.com</a> or call (555) 123-4567</p>\n  </body>\n</html>\n\n\n\n🧠 Behavior Notes:\nUse standard duration for dining reservations:\n\nDefault = 2 hours (unless specified by the user).\n\nConvert duration into end_time accordingly.\n\nFormat time in ISO 8601 (RFC3339) for calendar integration.\n\nTime zone is assumed to be the Restaurant's local time : {{ $now }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "id": "4a33f834-4c52-4a01-8fff-9b1a976adfcf",
+      "name": "Booking Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        2720,
+        400
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"calendar_event\": {\n    \"start_time\": \"2025-05-10T14:00:00\",\n    \"end_time\": \"2025-05-10T17:00:00\",\n    \"name\": \"Sarah Johnson\"\n  },\n  \"email\": {\n    \"to\": \"sarah@example.com\",\n    \"subject\": \"Your Relaxing SPA Booking Confirmation – Rejuvenate & Revive Package\",\n    \"html_body\": \"<html>... (full email HTML below) ...</html>\",\n    \"description\": \"Booking with Sarah\"\n  }\n}\n"
+      },
+      "id": "036e1a49-268a-423b-ad74-23c25e7d7cc1",
+      "name": "Structured Output Parser1",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        2880,
+        592
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=🍽️ Your table has been successfully booked! 🎉\n\n📅 Please check your email for the confirmation — it includes your reservation details like date, time, and number of guests.\n\n🥂 We’ve also saved your details in our system, so everything will be ready when you arrive.\n\nWe can’t wait to welcome you to our Restaurant — where great food meets warm hospitality. 🌟\nFeel free to reach out if you have any questions. See you soon! 😊",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a083e38c-3e97-4082-abe9-30900960a932",
+      "name": "Telegram3",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        3344,
+        560
+      ],
+      "webhookId": "9b5b50fc-47bb-467a-abc1-094c9c738c4f",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Thank you for your confirmation! We have noted down your information. You will be getting confirmation mail soon. ",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "7848dd31-5e21-4ca5-bd67-1e3cd55387d3",
+      "name": "Telegram1",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        2272,
+        336
+      ],
+      "webhookId": "4ff6a4a5-25f6-4f1d-8e71-e79ee6883a0d",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 15
+      },
+      "id": "dbfba813-bc69-4ab3-8539-4c9c69c317e6",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        1504,
+        672
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.output.email.to }}",
+        "subject": "={{ $json.output.email.subject }}",
+        "message": "={{ $json.output.email.html_body }}",
+        "options": {}
+      },
+      "id": "d86ed5f5-d6b5-4d75-b73a-a5ba1865ef2c",
+      "name": "Send a message",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        3152,
+        544
+      ],
+      "webhookId": "c1388946-d239-4325-abde-1a9ae909797b",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "content": "## نظرة عامة\n\n- هاد الفلو عبارة عن **مساعد حجوزات ذكي (AI)** بيشتغل عالتيليجرام، وبيأتمت عملية حجز طاولة مطعم بالكامل.\n- بيحكي مع الزبون بشكل طبيعي، بيجمع تفاصيل الحجز (عدد الضيوف، التفضيلات، التاريخ/الوقت، طلبات خاصة)، بعدين بيأكد الحجز ويسجلو بـ Google Calendar ويبعت إيميل تأكيد — كلو أوتوماتيك من الأول للآخر.\n\n---\n\n## آلية الشغل\n\n### 1. تفاعل المستخدم\n- الفلو بيبلش برسالة ترحيب عبر تيليجرام.\n- الـ AI Agent بيسأل خطوة خطوة:\n  - عدد الضيوف\n  - مكان الجلوس (داخلي / خارجي / غرفة خاصة)\n  - مناسبات خاصة (عيد ميلاد، ذكرى...)\n  - التاريخ والوقت المفضل\n- بعد ما يجمع التفاصيل، بيسوي مسودة (Draft) للحجز.\n\n### 2. التأكيد وجمع البيانات الشخصية\n- الزبون بيراجع المسودة ويأكد.\n- بعدها المساعد بيطلب الاسم، الإيميل، ورقم الهاتف.\n\n### 3. الحجز والإشعارات\n- بعد التأكيد، التفاصيل بتنبعت لـ **Google Calendar** لإنشاء الحدث.\n- بينبعت **إيميل تأكيد** فيه كل تفاصيل الحجز.\n- رسالة تيليجرام أخيرة بتأكد إنو الحجز تم بنجاح.\n\n---\n\n## طريقة الاستخدام\n- بيتفعل مباشرة من **بوت تيليجرام**.\n- الزبون لازم يبدأ محادثة مع البوت وبس.\n- المساعد بيوجهه خطوة خطوة لحد ما يخلص الحجز.\n- بالنهاية الزبون بياخد تأكيد عبر الإيميل والتيليجرام سوا.\n\n---\n\n## المتطلبات\nعشان تشغل الفلو محتاج:\n- **حساب n8n** (self-hosted أو cloud)\n- **توكن بوت تيليجرام**\n- **مفتاح API لـ Groq/OpenAI** (لمحادثة الـ AI)\n- **صلاحية Google Calendar API**\n- **بيانات اعتماد Gmail / SMTP** (لبعت إيميلات التأكيد)",
+        "height": 1200,
+        "width": 1072
+      },
+      "id": "e1cc1f2e-d20f-4b2f-af67-4c9ebce5bf91",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        32,
+        160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=🍽 Restaurant Table Booking Prompt (Converted)\n\nYou are the Restaurant Reservation Agent for Gourmet Dining – A Fine Culinary Experience.\n\nYour role is to assist users in booking a table, starting with gathering their information, confirming the reservation, and ensuring it's added to the calendar and an email is sent.\n\nUser Input : {{ $json.message.text }}\n\n🎭 Tone and Behavior:\n\nWarm, polite, and professional — like a fine-dining concierge.\n\nFriendly but efficient.\n\nAlways move the conversation step by step, and never skip ahead unless you’re sure.\n\nNever generate menu suggestions or table options randomly — rely on user preferences and confirmations.\n\n🧾 FLOW STRUCTURE:\n\n1. FIRST INTERACTION (Warm Greeting)\nAlways start with a polite opening and ask how you can help.\n\n{\n  \"is_pass_next\": false,\n  \"message\": \"Welcome to Gourmet Dining 🍷✨ A Fine Culinary Experience. How may I assist you today? Are you looking to reserve a table?\"\n}\n\n\n2. RESERVATION DETAILS (Step by Step Questions)\nAsk one question at a time in sequence:\n\nDining Preference (Indoor / Outdoor / Private Room)\n\nNumber of Guests\n\nSpecial Requests (birthday setup, dietary needs, anniversary, etc.)\n\nPreferred Date & Time\n\nExample response if still collecting info:\n\n{\n  \"is_pass_next\": false,\n  \"message\": \"Great choice! How many guests will be joining you?\"\n}\n\n\n3. PRE-CONFIRMATION: Reservation Draft\nOnce enough details are gathered, propose a draft for review.\n\n{\n  \"is_pass_next\": false,\n  \"message\": \"Here’s your table reservation draft 🍽️:\\n\\n🗓 Date: [Insert Date & Time]\\n👥 Guests: [Number of Guests]\\n🏷 Dining Preference: [Indoor/Outdoor/Private Room]\\n🎉 Special Notes: [If any]\\n📍 Location: 45 Culinary Avenue, Foodie City\\n\\nShall we finalize this?\"\n}\n\n\n4. GATHER PERSONAL DETAILS (After Confirmation)\nOnly after the user confirms the reservation draft, ask for full name, email, and phone number.\n\n{\n  \"is_pass_next\": false,\n  \"message\": \"Perfect! To complete your reservation, may I have your full name, email, and an optional contact number?\"\n}\n\n\n5. FINAL CONFIRMATION & PASS TO SYSTEM\nOnce user provides details, finalize booking and pass it to system:\n\n{\n  \"is_pass_next\": true,\n  \"message\": {\n    \"customer_name\": \"[Name]\",\n    \"email\": \"[Email]\",\n    \"phone\": \"[Phone Number]\",\n    \"reservation_date\": \"[YYYY-MM-DD]\",\n    \"reservation_time\": \"[Time]\",\n    \"guests\": \"[Number of Guests]\",\n    \"dining_preference\": \"[Indoor/Outdoor/Private Room]\",\n    \"special_notes\": \"[Any notes from user]\"\n  }\n}\n\nTime zone is assumed to be the Restaurant's local time : {{ $now }}\n\n",
+        "hasOutputParser": true,
+        "options": {
+          "returnIntermediateSteps": true
+        }
+      },
+      "id": "ab01d142-66e8-4257-a676-771b075d77d1",
+      "name": "Information Gathering Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1488,
+        416
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "content": "### Telegram Trigger و AI Agent\n\n- **Telegram Trigger** → بيسمع أي رسالة جديدة من المستخدم عالتيليجرام.\n- **AI Agent** → بيحلل رسالة المستخدم، بيفهم قصدو (حجز، فيدباك، إلخ)، وبيرد بأسلوب محادثة طبيعي.\n- **الذاكرة والـ Parsers** → بتساعد الـ AI يتذكر سياق المحادثة، وبتضبط شكل الرد (JSON) عشان الفلو يبقى شغال صح.",
+        "height": 880,
+        "width": 752
+      },
+      "id": "cd762a60-0351-4a61-b343-72a584c9cf35",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1216,
+        160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Switch, Telegram, و Edit Fields\n\n- **عقدة Switch** → بتقرر وجهة الفلو حسب رد المستخدم:\n  - لو الزبون عم يحجز → الفلو بيكمل لمراحل الحجز.\n  - لو عم يعطي فيدباك/رد عادي → بيوديه بمسار تاني (بس رد ورجوع).\n\n- **عقد Telegram** → بترجع رد مناسب للمستخدم حسب المسار المختار.\n\n- **Edit Fields** → بتجهز وتنسق تفاصيل الحجز (عدد الضيوف، التفضيلات، الوقت...) قبل ما تتبعت للخطوة الجاية.",
+        "height": 832,
+        "width": 608
+      },
+      "id": "729b0455-4f5d-498b-a195-476a4511eb08",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2000,
+        64
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Booking Agent, Google Calendar, Gmail و Telegram\n\n- **Booking Agent** → بياخد كل تفاصيل الحجز النهائية من المستخدم، بينظمها، وبيجهز ملخص منسق. كمان بيسوي قالب HTML لإيميل التأكيد وبيتأكد إنو بيانات الحجز مرتبة صح.\n\n- **Google Calendar** → بينشئ حدث حجز أوتوماتيكي فيه كل التفاصيل (عدد الضيوف، التفضيلات، الوقت، الطلبات الخاصة).\n\n- **Send a Message (Gmail)** → بيبعت إيميل تأكيد احترافي للزبون فيه كل تفاصيل الحجز.\n\n- **Telegram (التأكيد النهائي)** → بيبلغ الزبون عالتيليجرام إنو الحجز تم بنجاح، وبيكمل الفلو للنهاية.",
+        "height": 896,
+        "width": 880
+      },
+      "id": "db863691-0887-499e-8004-3edacfe59206",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2640,
+        64
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        624
+      ],
+      "id": "d2465d48-7cf6-447e-99d7-d7e195b49ff3",
+      "name": "Groq Chat Model"
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-prompt-guard-2-86m",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        848
+      ],
+      "id": "816575a7-6346-49cb-b916-755bf5f81ee3",
+      "name": "Groq Chat Model1"
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        2704,
+        608
+      ],
+      "id": "6f42e93c-e4ec-4f0c-920a-9ba0596e307f",
+      "name": "Groq Chat Model2"
+    },
+    {
+      "parameters": {},
+      "id": "1e30d508-64e7-4e8a-a01c-090fddbdfcd3",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "8005911221",
+        "text": "=Error fi flow Restaurant Booking\n\nNode wa2af 3ind: {{ $json.execution.lastNodeExecuted }}\nError message: {{ $json.execution.error.message }}\nWaqt: {{ $now }}\nRabet tanfeez: {{ $json.execution.url }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "ba51f02f-3f9d-4e5c-b5aa-de714c7d73e6",
+      "name": "Error Notify",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        1424
+      ],
+      "webhookId": "d3a11e9f-10a2-48a8-92e7-38bc95a0199e"
+    },
+    {
+      "parameters": {
+        "content": "### Error Handling\n\nError Trigger -> byenfa3el lama ay node bel flow yefshal (Google Calendar, Gmail, AI Agent...)\n\nError Notify -> Telegram lel admin fee: esem el node yeli wa2af, nas el error, wa2t, w rabet el execution 3ashan tefta7ha w te3rf wen el moshkeleh.\n\nMalahaza: lazem el flow ykoun Active 3ashan Error Trigger yeshtaghel."
+      },
+      "id": "ae5493da-442a-4324-a929-ab08ab9067ff",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        784
+      ]
+    }
+  ],
+  "activeVersion": null,
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "parentFolderId": null,
+  "scopes": [
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true
+}

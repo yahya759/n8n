@@ -1,0 +1,567 @@
+{
+  "id": "TeJkE4dDzBmjeLNP",
+  "name": "GEO Visibility Bot",
+  "active": false,
+  "isArchived": false,
+  "versionId": "1f9470f2-1ec5-467e-85cc-c8a6f54b35af",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "createdAt": "2026-06-24T13:09:24.706Z",
+  "updatedAt": "2026-06-24T13:09:24.706Z",
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "connections": {
+    "Receive Message": {
+      "main": [
+        [
+          {
+            "node": "Extract URL & Chat ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract URL & Chat ID": {
+      "main": [
+        [
+          {
+            "node": "Is Valid URL?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Valid URL?": {
+      "main": [
+        [
+          {
+            "node": "Send Wait Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Invalid URL Msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Wait Message": {
+      "main": [
+        [
+          {
+            "node": "Scrape Website (Jina)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Website (Jina)": {
+      "main": [
+        [
+          {
+            "node": "Extract Brand Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Scrape Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Brand Info": {
+      "main": [
+        [
+          {
+            "node": "Generate Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Questions": {
+      "main": [
+        [
+          {
+            "node": "Prepare Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Questions": {
+      "main": [
+        [
+          {
+            "node": "Loop Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Score": {
+      "main": [
+        [
+          {
+            "node": "Format Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Report": {
+      "main": [
+        [
+          {
+            "node": "Send Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate AI Sources": {
+      "main": [
+        [
+          {
+            "node": "Loop Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Questions": {
+      "main": [
+        [
+          {
+            "node": "Calculate Score",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Simulate AI Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "id": "42d6e97f-4976-441f-8d2f-6f08261dd4fc",
+      "name": "Receive Message",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        600
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ]
+      },
+      "webhookId": "605e1c65-57cd-43f0-8624-3a2bcb3c86bf"
+    },
+    {
+      "id": "278a8470-665e-4978-9ea5-8f68cddee71b",
+      "name": "Extract URL & Chat ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        600
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "url",
+              "name": "url",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "chatId",
+              "name": "chatId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "number"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a222e057-98e9-4548-b2bf-81efe19f870e",
+      "name": "Is Valid URL?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        600
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "or",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.url }}",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              },
+              "rightValue": "^https?://"
+            }
+          ],
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "a2e8497f-46e8-4798-b4da-1fc74bc1d2b1",
+      "name": "Send Wait Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        840,
+        450
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Extract URL & Chat ID').item.json.chatId }}",
+        "text": "⏳ Analyzing your website... This may take 2-4 minutes."
+      },
+      "webhookId": "dd96644a-578b-4f89-9c3c-918d5cf4f9f5"
+    },
+    {
+      "id": "88341ae2-693f-4070-b012-381d1645c04b",
+      "name": "Scrape Website (Jina)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1040,
+        450
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://r.jina.ai/{{ $('Extract URL & Chat ID').item.json.url }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "text/plain"
+            }
+          ]
+        },
+        "onError": "continueErrorOutput"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "c3320f0d-dd11-4783-84e1-9930da34916d",
+      "name": "Extract Brand Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1240,
+        450
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.fireworks.ai/inference/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "accounts/fireworks/models/llama-v3p1-8b-instruct",
+          "max_tokens": 2000,
+          "temperature": 0.1,
+          "messages": [
+            {
+              "role": "user",
+              "content": "=You are a marketing analyst. Read the following website content and extract:\n1. Niche (industry/field)\n2. Main services (3-5 services)\n3. Target geographic region\n4. Brand name\n\nReply in JSON only:\n{\n  \"brand\": \"\",\n  \"niche\": \"\",\n  \"services\": [],\n  \"location\": \"\"\n}\n\nContent: {{ $('Scrape Website (Jina)').item.json.data }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "9a76aeee-80a8-458e-9837-54c92ec23e99",
+      "name": "Generate Questions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1440,
+        450
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.fireworks.ai/inference/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "accounts/fireworks/models/llama-v3p1-8b-instruct",
+          "max_tokens": 2000,
+          "temperature": 0.3,
+          "messages": [
+            {
+              "role": "user",
+              "content": "=Based on the following information:\n- Brand Info: {{ $('Extract Brand Info').item.json.choices[0].message.content }}\n\nGenerate 10 realistic questions that potential customers would ask on search engines or AI tools when looking for this type of service.\n\nQuestions must be:\n- In Arabic or English depending on the target market\n- Realistic and specific\n- Varied (different services, different problems)\n\nReply in JSON only:\n{\"questions\": [\"question1\", \"question2\", ...]}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d8aa8eb0-1d2e-49eb-8b04-58013613c1ae",
+      "name": "Prepare Questions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2.3,
+      "position": [
+        1640,
+        450
+      ],
+      "parameters": {
+        "mode": "run_once_for_all_items",
+        "jsCode": "// Parse the brand info and questions from Fireworks responses\nconst brandResponse = JSON.parse($json.choices[0].message.content);\nconst qsResponseRaw = $('Generate Questions').item.json.choices[0].message.content;\nconst qsResponse = JSON.parse(qsResponseRaw);\n\nconst brand = brandResponse.brand || '';\nconst niche = brandResponse.niche || '';\nconst services = brandResponse.services || [];\nconst location = brandResponse.location || '';\nconst questions = qsResponse.questions || [];\n\n// Return one item per question\nreturn questions.map((q, index) => ({\n  brand,\n  niche,\n  services: JSON.stringify(services),\n  location,\n  question: q,\n  questionIndex: index,\n  totalQuestions: questions.length\n}));"
+      }
+    },
+    {
+      "id": "c1fb7c09-08a6-4724-b038-c868ed6ad6f8",
+      "name": "Calculate Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2.3,
+      "position": [
+        2040,
+        600
+      ],
+      "parameters": {
+        "mode": "run_once_for_all_items",
+        "jsCode": "// This receives all question results from the loop\nconst allResults = $input.all();\n\nlet totalMentions = 0;\nconst questionResults = [];\nconst competitorCounts = {};\n\nfor (const item of allResults) {\n  try {\n    const content = JSON.parse(item.json.choices[0].message.content);\n    const q = content.question || 'Unknown question';\n    const sources = content.sources || [];\n    \n    let qMentions = 0;\n    const sourceResults = [];\n    \n    for (const src of sources) {\n      const mentioned = src.mentioned_brand === true;\n      if (mentioned) qMentions++;\n      \n      if (src.mentioned_competitors) {\n        for (const comp of src.mentioned_competitors) {\n          competitorCounts[comp] = (competitorCounts[comp] || 0) + 1;\n        }\n      }\n      \n      sourceResults.push({\n        source: src.source,\n        mentioned: mentioned,\n        reason: src.failure_reason || '',\n        category: src.failure_category || '',\n        fix: src.fix || ''\n      });\n    }\n    \n    totalMentions += qMentions;\n    questionResults.push({\n      question: q,\n      mentions: qMentions,\n      sources: sourceResults\n    });\n  } catch(e) {\n    questionResults.push({\n      question: 'Error parsing result',\n      mentions: 0,\n      sources: []\n    });\n  }\n}\n\nconst totalTests = allResults.length * 3;\nconst score = totalTests > 0 ? Math.round((totalMentions / totalTests) * 100) : 0;\n\n// Find top competitor\nlet topCompetitor = 'None';\nlet topCount = 0;\nfor (const [name, count] of Object.entries(competitorCounts)) {\n  if (count > topCount) {\n    topCount = count;\n    topCompetitor = name;\n  }\n}\n\nreturn [{\n  score,\n  totalMentions,\n  totalTests,\n  topCompetitor,\n  questionResults: JSON.stringify(questionResults)\n}];"
+      }
+    },
+    {
+      "id": "5718e526-07ad-489f-b293-5ec19f5d6960",
+      "name": "Format Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2240,
+        600
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.fireworks.ai/inference/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "accounts/fireworks/models/llama-v3p1-8b-instruct",
+          "max_tokens": 3000,
+          "temperature": 0.3,
+          "messages": [
+            {
+              "role": "user",
+              "content": "=Write a formatted GEO Visibility report to be sent via Telegram.\n\nData:\n- Score: {{ $json.score }}/100\n- Appeared in: {{ $json.totalMentions }} out of {{ $json.totalTests }} tests\n- Top competitor: {{ $json.topCompetitor }}\n- Question results: {{ $json.questionResults }}\n\nWrite the report in exactly this format (use emojis and dividers):\n\n🔍 GEO Visibility Report\n━━━━━━━━━━━━━━━\n📊 Score: [score]/100\n✅ Appeared in: [mentions] out of [total] tests\n🏆 Top competitor: [competitor]\n━━━━━━━━━━━━━━━\n📋 Question Breakdown:\n\n[For each question:]\n❓ [question]\n• ChatGPT: ✅/❌ | Perplexity: ✅/❌ | Gemini: ✅/❌\n• Why: [reason]\n• Fix: [specific fix]\n\n━━━━━━━━━━━━━━━\n📅 This Week's Priorities:\n1. [most important action]\n2. [second action]\n3. [third action]\n━━━━━━━━━━━━━━━\n💡 To re-analyze in a week, just send your URL again"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d440aa95-cf7b-43c4-8841-7909bdf7c400",
+      "name": "Send Report",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2440,
+        600
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Receive Message').item.json.message.chat.id }}",
+        "text": "={{ $json.choices[0].message.content }}"
+      },
+      "webhookId": "f6270dee-eb79-422e-a1e8-4d3211077759"
+    },
+    {
+      "id": "c10c5487-1362-48ce-bdba-3f26d2bf6aec",
+      "name": "Simulate AI Sources",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2040,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.fireworks.ai/inference/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "accounts/fireworks/models/llama-v3p1-8b-instruct",
+          "max_tokens": 2000,
+          "temperature": 0.5,
+          "messages": [
+            {
+              "role": "user",
+              "content": "=You are simulating 3 AI sources: ChatGPT, Perplexity, and Gemini. For each, simulate how they would answer this question.\n\nQuestion: {{ $json.question }}\n\nTarget brand: {{ $json.brand }}\nNiche: {{ $json.niche }}\nServices: {{ $json.services }}\nLocation: {{ $json.location }}\n\nFor each source, answer as that source would actually answer. Then provide JSON:\n{\n  \"question\": \"the question\",\n  \"sources\": [\n    {\n      \"source\": \"ChatGPT\",\n      \"mentioned_brand\": true/false,\n      \"mentioned_competitors\": [\"name1\"],\n      \"failure_reason\": \"why not mentioned\",\n      \"failure_category\": \"no_reviews / no_articles / no_forum_activity / weak_content / strong_competitor\",\n      \"fix\": \"specific actionable fix\"\n    },\n    {\n      \"source\": \"Perplexity\",\n      \"mentioned_brand\": true/false,\n      \"mentioned_competitors\": [],\n      \"failure_reason\": \"\",\n      \"failure_category\": \"\",\n      \"fix\": \"\"\n    },\n    {\n      \"source\": \"Gemini\",\n      \"mentioned_brand\": true/false,\n      \"mentioned_competitors\": [],\n      \"failure_reason\": \"\",\n      \"failure_category\": \"\",\n      \"fix\": \"\"\n    }\n  ]\n}\n\nReply with the JSON only."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "9ccef348-4f57-4ce9-ae27-9af76f38da10",
+      "name": "Loop Questions",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1840,
+        450
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "e4564fdf-76ef-494b-8639-26026c9dc4b1",
+      "name": "Send Scrape Error",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1240,
+        750
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Extract URL & Chat ID').item.json.chatId }}",
+        "text": "❌ Could not scrape your website. This often happens with sites like Instagram, Facebook, TikTok, or sites with strong anti-bot protection.\n\nTry a different URL (e.g. your main business website, not social media)."
+      },
+      "webhookId": "825bac1c-84cd-4793-9521-b163aef65f56"
+    },
+    {
+      "id": "717135c2-a5c9-4e47-85b5-3cbc0721bdcb",
+      "name": "Send Invalid URL Msg",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        840,
+        800
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "Please send your website URL. Example: https://yoursite.com"
+      },
+      "webhookId": "fdc30e2f-8dc8-4269-920a-c13cebf0fa63"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [],
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "parentFolderId": null,
+  "scopes": [
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true
+}

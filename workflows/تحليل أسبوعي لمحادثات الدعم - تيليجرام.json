@@ -1,0 +1,1038 @@
+{
+  "id": "0fhFGFIDQJCKEpWo",
+  "name": "تحليل أسبوعي لمحادثات الدعم - تيليجرام",
+  "active": true,
+  "isArchived": false,
+  "versionId": "e4442f62-bf7b-4bb7-b512-8ebe83d9860c",
+  "activeVersionId": "e4442f62-bf7b-4bb7-b512-8ebe83d9860c",
+  "triggerCount": 1,
+  "createdAt": "2026-07-08T07:14:44.492Z",
+  "updatedAt": "2026-07-09T05:55:01.997Z",
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "connections": {
+    "Weekly Schedule": {
+      "main": [
+        [
+          {
+            "node": "Get New Conversations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get New Conversations": {
+      "main": [
+        [
+          {
+            "node": "Batch Process Conversations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get This Week Results": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Weekly Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Weekly Summary": {
+      "main": [
+        [
+          {
+            "node": "Save Weekly Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Weekly Summary": {
+      "main": [
+        [
+          {
+            "node": "Check Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Conversation": {
+      "main": [
+        [
+          {
+            "node": "Shape Analysis Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analysis Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Analyze Conversation",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape Analysis Result": {
+      "main": [
+        [
+          {
+            "node": "Save Analysis Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Analysis Result": {
+      "main": [
+        [
+          {
+            "node": "Mark Conversation Analyzed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Conversation Analyzed": {
+      "main": [
+        [
+          {
+            "node": "Batch Process Conversations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch Process Conversations": {
+      "main": [
+        [
+          {
+            "node": "Get This Week Results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analyze Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyze Conversation",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "f5aa74ab-754d-4c21-94ad-525a8eb42bb8",
+      "name": "Weekly Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "conversations",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "analyzed",
+              "condition": "eq",
+              "keyValue": "false"
+            }
+          ]
+        }
+      },
+      "id": "4c37c64d-ba71-4e92-bbd8-9fc8adbd23b7",
+      "name": "Get New Conversations",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "analysis_results",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "analyzed_at",
+              "condition": "gte",
+              "keyValue": "={{ $today.startOf(\"week\").toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "79f174d5-0a2f-4154-872d-a32db65a9a35",
+      "name": "Get This Week Results",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        736,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst topicCounts = {};\nconst sentimentMap = { positive: 1, neutral: 0, negative: -1 };\nlet sentimentSum = 0;\nlet sentimentCount = 0;\nlet negativeCount = 0;\n\nfor (const item of items) {\n  const topic = item.json.topic || \"غير مصنف\";\n  topicCounts[topic] = (topicCounts[topic] || 0) + 1;\n  const s = (item.json.sentiment || \"\").toLowerCase();\n  if (sentimentMap[s] !== undefined) {\n    sentimentSum += sentimentMap[s];\n    sentimentCount += 1;\n  }\n  if (s === \"negative\") negativeCount += 1;\n}\n\nconst topTopics = Object.entries(topicCounts)\n  .sort((a, b) => b[1] - a[1])\n  .slice(0, 10)\n  .map(([topic, count]) => ({ topic, count }));\n\nconst negativeRatio = items.length > 0 ? negativeCount / items.length : 0;\nconst alertTriggered = negativeRatio > 0.3;\n\nreturn [{\n  json: {\n    week_start: $today.startOf(\"week\").toISODate(),\n    top_topics: JSON.stringify(topTopics),\n    sentiment_score: sentimentCount > 0 ? sentimentSum / sentimentCount : 0,\n    negative_ratio: negativeRatio,\n    total_conversations: items.length,\n    alert_triggered: alertTriggered\n  }\n}];"
+      },
+      "id": "37d4aada-8a4f-4fa2-a2f9-b0cc33daf31c",
+      "name": "Aggregate Weekly Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "weekly_summary",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "week_start",
+              "fieldValue": "={{ $json.week_start }}"
+            },
+            {
+              "fieldId": "top_topics",
+              "fieldValue": "={{ $json.top_topics }}"
+            },
+            {
+              "fieldId": "sentiment_score",
+              "fieldValue": "={{ $json.sentiment_score }}"
+            },
+            {
+              "fieldId": "alert_triggered",
+              "fieldValue": "={{ $json.alert_triggered }}"
+            }
+          ]
+        }
+      },
+      "id": "32a26610-a4c8-4132-8254-07cc3fe57947",
+      "name": "Save Weekly Summary",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.alert_triggered }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d0fa63b9-003f-41e0-bd26-1e0a7997bcd8",
+      "name": "Check Alert",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1472,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "8005911221",
+        "text": "=⚠️ تنبيه: نسبة الشكاوى السلبية هالأسبوع {{ Math.round($json.negative_ratio * 100) }}%\nأكتر موضوع متكرر: {{ JSON.parse($json.top_topics)[0]?.topic }}",
+        "additionalFields": {},
+        "resource": "message",
+        "operation": "sendMessage"
+      },
+      "id": "4f32eb79-b708-43d3-ba1c-5d2a9b6dfce6",
+      "name": "Send Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1696,
+        0
+      ],
+      "webhookId": "d1927d6e-c8f0-4f07-966b-d0b554290adf"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=حلل المحادثة التالية:\n{{ $json.raw_text }}",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "انت محلل محادثات دعم عملاء متخصص باللهجات العربية. لكل محادثة استخرج: topic (موضوع قصير بالعربي)، sentiment (positive/neutral/negative فقط)، representative_quote (جملة قصيرة من النص نفسه). رجع JSON فقط."
+        }
+      },
+      "id": "2595a0a8-e18f-4303-9080-f10a06a9bc2e",
+      "name": "Analyze Conversation",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"topic\": \"مشكلة الشحن\", \"sentiment\": \"negative\", \"representative_quote\": \"الشحن تأخر كتير\"}"
+      },
+      "id": "90514fc6-d3ed-4c62-b401-c6c0274af5aa",
+      "name": "Analysis Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        848,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "conv-id",
+              "name": "conversation_id",
+              "value": "={{ $('Get New Conversations').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "topic",
+              "name": "topic",
+              "value": "={{ $json.topic }}",
+              "type": "string"
+            },
+            {
+              "id": "sentiment",
+              "name": "sentiment",
+              "value": "={{ $json.sentiment }}",
+              "type": "string"
+            },
+            {
+              "id": "quote",
+              "name": "representative_quote",
+              "value": "={{ $json.representative_quote }}",
+              "type": "string"
+            },
+            {
+              "id": "analyzed-at",
+              "name": "analyzed_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0fdb936b-f419-424e-be0c-f6f083b83229",
+      "name": "Shape Analysis Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "analysis_results",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "conversation_id",
+              "fieldValue": "={{ $json.conversation_id }}"
+            },
+            {
+              "fieldId": "topic",
+              "fieldValue": "={{ $json.topic }}"
+            },
+            {
+              "fieldId": "sentiment",
+              "fieldValue": "={{ $json.sentiment }}"
+            },
+            {
+              "fieldId": "representative_quote",
+              "fieldValue": "={{ $json.representative_quote }}"
+            },
+            {
+              "fieldId": "analyzed_at",
+              "fieldValue": "={{ $json.analyzed_at }}"
+            }
+          ]
+        }
+      },
+      "id": "7a556e7f-c996-461f-ba07-efbf895823cb",
+      "name": "Save Analysis Result",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversations",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Get New Conversations').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "analyzed",
+              "fieldValue": "true"
+            }
+          ]
+        }
+      },
+      "id": "d660f688-d140-40c6-9592-95c82860b4b9",
+      "name": "Mark Conversation Analyzed",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 20,
+        "options": {}
+      },
+      "id": "df537f4a-23b4-487d-aab6-5910bac76714",
+      "name": "Batch Process Conversations",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        656,
+        656
+      ],
+      "id": "395c9b76-86d0-4d98-a68f-ff4625eb7b81",
+      "name": "Groq Chat Model"
+    }
+  ],
+  "activeVersion": {
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "weeks",
+                "triggerAtHour": 9
+              }
+            ]
+          }
+        },
+        "id": "f5aa74ab-754d-4c21-94ad-525a8eb42bb8",
+        "name": "Weekly Schedule",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "conversations",
+          "returnAll": true,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "analyzed",
+                "condition": "eq",
+                "keyValue": "false"
+              }
+            ]
+          }
+        },
+        "id": "4c37c64d-ba71-4e92-bbd8-9fc8adbd23b7",
+        "name": "Get New Conversations",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          224,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "analysis_results",
+          "returnAll": true,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "analyzed_at",
+                "condition": "gte",
+                "keyValue": "={{ $today.startOf(\"week\").toISO() }}"
+              }
+            ]
+          }
+        },
+        "id": "79f174d5-0a2f-4154-872d-a32db65a9a35",
+        "name": "Get This Week Results",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          736,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst topicCounts = {};\nconst sentimentMap = { positive: 1, neutral: 0, negative: -1 };\nlet sentimentSum = 0;\nlet sentimentCount = 0;\nlet negativeCount = 0;\n\nfor (const item of items) {\n  const topic = item.json.topic || \"غير مصنف\";\n  topicCounts[topic] = (topicCounts[topic] || 0) + 1;\n  const s = (item.json.sentiment || \"\").toLowerCase();\n  if (sentimentMap[s] !== undefined) {\n    sentimentSum += sentimentMap[s];\n    sentimentCount += 1;\n  }\n  if (s === \"negative\") negativeCount += 1;\n}\n\nconst topTopics = Object.entries(topicCounts)\n  .sort((a, b) => b[1] - a[1])\n  .slice(0, 10)\n  .map(([topic, count]) => ({ topic, count }));\n\nconst negativeRatio = items.length > 0 ? negativeCount / items.length : 0;\nconst alertTriggered = negativeRatio > 0.3;\n\nreturn [{\n  json: {\n    week_start: $today.startOf(\"week\").toISODate(),\n    top_topics: JSON.stringify(topTopics),\n    sentiment_score: sentimentCount > 0 ? sentimentSum / sentimentCount : 0,\n    negative_ratio: negativeRatio,\n    total_conversations: items.length,\n    alert_triggered: alertTriggered\n  }\n}];"
+        },
+        "id": "37d4aada-8a4f-4fa2-a2f9-b0cc33daf31c",
+        "name": "Aggregate Weekly Summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1024,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "weekly_summary",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "week_start",
+                "fieldValue": "={{ $json.week_start }}"
+              },
+              {
+                "fieldId": "top_topics",
+                "fieldValue": "={{ $json.top_topics }}"
+              },
+              {
+                "fieldId": "sentiment_score",
+                "fieldValue": "={{ $json.sentiment_score }}"
+              },
+              {
+                "fieldId": "alert_triggered",
+                "fieldValue": "={{ $json.alert_triggered }}"
+              }
+            ]
+          }
+        },
+        "id": "32a26610-a4c8-4132-8254-07cc3fe57947",
+        "name": "Save Weekly Summary",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1248,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "combinator": "and",
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.alert_triggered }}",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                },
+                "rightValue": true
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "d0fa63b9-003f-41e0-bd26-1e0a7997bcd8",
+        "name": "Check Alert",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1472,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "8005911221",
+          "text": "=⚠️ تنبيه: نسبة الشكاوى السلبية هالأسبوع {{ Math.round($json.negative_ratio * 100) }}%\nأكتر موضوع متكرر: {{ JSON.parse($json.top_topics)[0]?.topic }}",
+          "additionalFields": {},
+          "resource": "message",
+          "operation": "sendMessage"
+        },
+        "id": "4f32eb79-b708-43d3-ba1c-5d2a9b6dfce6",
+        "name": "Send Telegram Alert",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1696,
+          0
+        ],
+        "webhookId": "d1927d6e-c8f0-4f07-966b-d0b554290adf"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=حلل المحادثة التالية:\n{{ $json.raw_text }}",
+          "hasOutputParser": true,
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "انت محلل محادثات دعم عملاء متخصص باللهجات العربية. لكل محادثة استخرج: topic (موضوع قصير بالعربي)، sentiment (positive/neutral/negative فقط)، representative_quote (جملة قصيرة من النص نفسه). رجع JSON فقط."
+          }
+        },
+        "id": "2595a0a8-e18f-4303-9080-f10a06a9bc2e",
+        "name": "Analyze Conversation",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          672,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\"topic\": \"مشكلة الشحن\", \"sentiment\": \"negative\", \"representative_quote\": \"الشحن تأخر كتير\"}"
+        },
+        "id": "90514fc6-d3ed-4c62-b401-c6c0274af5aa",
+        "name": "Analysis Output Parser",
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          848,
+          464
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "conv-id",
+                "name": "conversation_id",
+                "value": "={{ $('Get New Conversations').item.json.id }}",
+                "type": "string"
+              },
+              {
+                "id": "topic",
+                "name": "topic",
+                "value": "={{ $json.topic }}",
+                "type": "string"
+              },
+              {
+                "id": "sentiment",
+                "name": "sentiment",
+                "value": "={{ $json.sentiment }}",
+                "type": "string"
+              },
+              {
+                "id": "quote",
+                "name": "representative_quote",
+                "value": "={{ $json.representative_quote }}",
+                "type": "string"
+              },
+              {
+                "id": "analyzed-at",
+                "name": "analyzed_at",
+                "value": "={{ $now.toISO() }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "0fdb936b-f419-424e-be0c-f6f083b83229",
+        "name": "Shape Analysis Result",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1024,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "analysis_results",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "conversation_id",
+                "fieldValue": "={{ $json.conversation_id }}"
+              },
+              {
+                "fieldId": "topic",
+                "fieldValue": "={{ $json.topic }}"
+              },
+              {
+                "fieldId": "sentiment",
+                "fieldValue": "={{ $json.sentiment }}"
+              },
+              {
+                "fieldId": "representative_quote",
+                "fieldValue": "={{ $json.representative_quote }}"
+              },
+              {
+                "fieldId": "analyzed_at",
+                "fieldValue": "={{ $json.analyzed_at }}"
+              }
+            ]
+          }
+        },
+        "id": "7a556e7f-c996-461f-ba07-efbf895823cb",
+        "name": "Save Analysis Result",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1248,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversations",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Get New Conversations').item.json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "analyzed",
+                "fieldValue": "true"
+              }
+            ]
+          }
+        },
+        "id": "d660f688-d140-40c6-9592-95c82860b4b9",
+        "name": "Mark Conversation Analyzed",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1472,
+          416
+        ]
+      },
+      {
+        "parameters": {
+          "batchSize": 20,
+          "options": {}
+        },
+        "id": "df537f4a-23b4-487d-aab6-5910bac76714",
+        "name": "Batch Process Conversations",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          448,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "model": "llama-3.3-70b-versatile",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+        "typeVersion": 1,
+        "position": [
+          656,
+          656
+        ],
+        "id": "395c9b76-86d0-4d98-a68f-ff4625eb7b81",
+        "name": "Groq Chat Model"
+      }
+    ],
+    "connections": {
+      "Weekly Schedule": {
+        "main": [
+          [
+            {
+              "node": "Get New Conversations",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get New Conversations": {
+        "main": [
+          [
+            {
+              "node": "Batch Process Conversations",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get This Week Results": {
+        "main": [
+          [
+            {
+              "node": "Aggregate Weekly Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate Weekly Summary": {
+        "main": [
+          [
+            {
+              "node": "Save Weekly Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Weekly Summary": {
+        "main": [
+          [
+            {
+              "node": "Check Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Alert": {
+        "main": [
+          [
+            {
+              "node": "Send Telegram Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analyze Conversation": {
+        "main": [
+          [
+            {
+              "node": "Shape Analysis Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analysis Output Parser": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Analyze Conversation",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Shape Analysis Result": {
+        "main": [
+          [
+            {
+              "node": "Save Analysis Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Analysis Result": {
+        "main": [
+          [
+            {
+              "node": "Mark Conversation Analyzed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mark Conversation Analyzed": {
+        "main": [
+          [
+            {
+              "node": "Batch Process Conversations",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Batch Process Conversations": {
+        "main": [
+          [
+            {
+              "node": "Get This Week Results",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Analyze Conversation",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Groq Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Analyze Conversation",
+              "type": "ai_languageModel",
+              "index": 1
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "tags": [],
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "description": "فلو أسبوعي: يسحب محادثات تيليجرام الجديدة من Supabase، يحللها بالـ AI (موضوع/مشاعر/اقتباس)، يخزن النتائج، ويطلع ملخص أسبوعي مع تنبيه إذا ارتفعت الشكاوى السلبية",
+  "scopes": [
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true
+}

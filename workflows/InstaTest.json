@@ -1,0 +1,290 @@
+{
+  "id": "TtGX20Z89kSE0aLH",
+  "name": "InstaTest",
+  "active": false,
+  "isArchived": false,
+  "versionId": "63de1cac-f795-42d5-b159-89502ed96458",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "createdAt": "2026-06-29T10:53:37.486Z",
+  "updatedAt": "2026-06-29T11:00:10.031Z",
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "connections": {
+    "Getting message from Instagram": {
+      "main": [
+        [
+          {
+            "node": "Set your system promt for AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set your system promt for AI": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Local n8n memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "instagram_chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "45b70bee-d626-4169-b5fb-415aac5d91a8",
+      "name": "Getting message from Instagram",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        848,
+        624
+      ],
+      "webhookId": "d88bfe63-5b14-44fe-b132-6643c1469133"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prompt",
+              "name": "prompt",
+              "type": "string",
+              "value": "Persona: You are a instagram influencer.\nContext: You receive a messages from your subscribers\nTask: Answer questions in your writing style and patterns according to your previous posts text. Use your post only for style and patterns reference.\nStyle rules:\nsimple answers"
+            },
+            {
+              "id": "sessionId",
+              "name": "sessionId",
+              "type": "string",
+              "value": "={{ $json.body.session_id }}"
+            },
+            {
+              "id": "chatInput",
+              "name": "chatInput",
+              "type": "string",
+              "value": "={{ $json.body.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1e64ffa8-ae00-4efd-a0ef-024df87e859d",
+      "name": "Set your system promt for AI",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1104,
+        624
+      ],
+      "notes": "In this node in \"prompt\" variable you can set your system prompt"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "={{ $json.prompt }}"
+        }
+      },
+      "id": "913d47a1-ba77-4e5d-a67c-930af250609d",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1328,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "id": "267110b3-28c3-442f-bf80-d8869311697d",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "781f0e6b-e667-476f-960b-b37a29abf7ec",
+      "name": "Send respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $(\"Set your system promt for AI\").last().json.sessionId }}",
+        "contextWindowLength": 20
+      },
+      "id": "f9693c76-02a7-4c73-8769-4de41cfa0bd6",
+      "name": "Local n8n memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1440,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 بوت إنستغرام بالذكاء الاصطناعي\n---\n### الوصف:\nهذا الـ workflow يربط إنستغرام مع ManyChat و Groq AI. يستقبل الرسائل من إنستغرام عبر ManyChat، يولّد رد باستخدام Groq، ويرسله обратно إلى إنستغرام.\n\n### الخطوات:\n1️⃣ استقبال رسالة من إنستغرام (عبر ManyChat)\n2️⃣ تجهيز الـ system prompt للذكاء الاصطناعي\n3️⃣ توليد رد مناسب باستخدام Groq\n4️⃣ إرسال الرد إلى إنستغرام (عبر ManyChat)\n\n---\n**النموذج:** Groq llama-3.3-70b-versatile\n**الذاكرة:** آخر 20 رسالة لكل جلسة\n**الرابط:** [ManyChat](https://manychat.com)",
+        "height": 528,
+        "width": 500,
+        "color": 5
+      },
+      "id": "ca1de6d2-7b1e-411b-84e7-d15742cef59c",
+      "name": "ملخص البوت",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        272,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1️⃣ استقبال الرسالة\n\n**الخطوة:** انسخ رابط الويبهوك من هذا النود والصقه في ManyChat\n\nلا يحتاج أي تعديل ✅",
+        "height": 300
+      },
+      "id": "15182912-06b5-46aa-9c1c-0aec4efbfee2",
+      "name": "ملاحظة الويبهوك",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        800,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2️⃣ تعديل البرومبت\n\n**الخطوة:** ادخل للنود وغيّر الـ system prompt حسب شخصيتك\n\nاكتب أسلوبك وطريقتك في الرد 📝",
+        "height": 320,
+        "width": 220
+      },
+      "id": "71d770b0-3ba2-4996-a2a4-76459bb336ad",
+      "name": "ملاحظة البرومبت",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3️⃣ قسم الذكاء الاصطناعي\n---\nيحتوي على 3 nodes:\n- 🤖 **AI Agent** — يولّد الردود\n- ⚡ **Groq Model** — llama-3.3-70b\n- 🧠 **Memory** — يحفظ آخر 20 رسالة\n\n### للتعديل:\n- في Groq: تقدر تغيّر النموذج\n- في Memory: تقدر تغيّر عدد الرسائل",
+        "height": 500,
+        "width": 320
+      },
+      "id": "c8bf6637-fccd-4cf9-a040-5d930b48d99c",
+      "name": "ملاحظة الذكاء الاصطناعي",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4️⃣ إرسال الرد\n\nيرسل رد الذكاء الاصطناعي إلى ManyChat\n\nلا يحتاج أي تعديل ✅",
+        "height": 300
+      },
+      "id": "47135386-dbaa-4ace-a160-0f43f1324124",
+      "name": "ملاحظة الرد",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        432
+      ]
+    }
+  ],
+  "activeVersion": null,
+  "tags": [],
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "description": "Instagram AI bot via ManyChat webhook. Receives messages, generates responses using Groq AI, sends back to ManyChat. Replaces OpenAI with Groq.",
+  "scopes": [
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true
+}

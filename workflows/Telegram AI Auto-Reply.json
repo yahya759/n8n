@@ -1,0 +1,262 @@
+{
+  "id": "2Z33RCHRs8T1KkJc",
+  "name": "Telegram AI Auto-Reply",
+  "active": true,
+  "isArchived": false,
+  "versionId": "8fd598f5-3663-4902-8d35-35abff1d4524",
+  "activeVersionId": "8fd598f5-3663-4902-8d35-35abff1d4524",
+  "triggerCount": 1,
+  "createdAt": "2026-07-07T06:41:23.078Z",
+  "updatedAt": "2026-07-07T07:08:33.941Z",
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "connections": {
+    "Receive Message": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "118533a2-a9e4-4c81-9412-c42b745f9f97",
+      "name": "Receive Message",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        160,
+        192
+      ],
+      "webhookId": "55b6de05-1661-4b19-950d-8f36abe0dc11"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant. Understand the users message and respond appropriately. Keep responses concise and friendly.",
+          "maxIterations": 5
+        }
+      },
+      "id": "2b206009-7eef-478f-8bcb-f9b6bf05b827",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        336,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "maxTokensToSample": 256,
+          "temperature": 0.7
+        }
+      },
+      "id": "ed5f9c20-db30-4908-96c4-67ddda418dbf",
+      "name": "Groq Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        352,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Receive Message').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_notification": false,
+          "disable_web_page_preview": false
+        }
+      },
+      "id": "37d3feda-7ce6-4193-9206-4802f6b2aea6",
+      "name": "Send Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        176
+      ],
+      "webhookId": "dde35452-7cef-467a-866e-11851a890649"
+    }
+  ],
+  "activeVersion": {
+    "nodes": [
+      {
+        "parameters": {
+          "updates": [
+            "message"
+          ],
+          "additionalFields": {}
+        },
+        "id": "118533a2-a9e4-4c81-9412-c42b745f9f97",
+        "name": "Receive Message",
+        "type": "n8n-nodes-base.telegramTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          160,
+          192
+        ],
+        "webhookId": "55b6de05-1661-4b19-950d-8f36abe0dc11"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.message.text }}",
+          "options": {
+            "systemMessage": "You are a helpful assistant. Understand the users message and respond appropriately. Keep responses concise and friendly.",
+            "maxIterations": 5
+          }
+        },
+        "id": "2b206009-7eef-478f-8bcb-f9b6bf05b827",
+        "name": "AI Agent",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          336,
+          176
+        ]
+      },
+      {
+        "parameters": {
+          "model": "llama-3.3-70b-versatile",
+          "options": {
+            "maxTokensToSample": 256,
+            "temperature": 0.7
+          }
+        },
+        "id": "ed5f9c20-db30-4908-96c4-67ddda418dbf",
+        "name": "Groq Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+        "typeVersion": 1,
+        "position": [
+          352,
+          384
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('Receive Message').item.json.message.chat.id }}",
+          "text": "={{ $json.output }}",
+          "additionalFields": {
+            "appendAttribution": false,
+            "disable_notification": false,
+            "disable_web_page_preview": false
+          }
+        },
+        "id": "37d3feda-7ce6-4193-9206-4802f6b2aea6",
+        "name": "Send Reply",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          640,
+          176
+        ],
+        "webhookId": "dde35452-7cef-467a-866e-11851a890649"
+      }
+    ],
+    "connections": {
+      "Receive Message": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Send Reply",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Groq Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "tags": [],
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "parentFolderId": null,
+  "scopes": [
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true
+}

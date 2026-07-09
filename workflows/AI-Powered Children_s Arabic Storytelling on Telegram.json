@@ -1,0 +1,197 @@
+{
+  "id": "jd3cP9yW3bEW4nQF",
+  "name": "AI-Powered Children_s Arabic Storytelling on Telegram",
+  "active": false,
+  "isArchived": false,
+  "versionId": "91bc6143-f560-41e6-8d67-e6f53d6c8244",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "createdAt": "2026-06-29T10:35:16.805Z",
+  "updatedAt": "2026-06-29T10:53:47.789Z",
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Create a Story for Kids",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Create a Story for Kids",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Create a Story for Kids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a Story for Kids": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "chunkingMode": "advanced",
+        "options": {
+          "summarizationMethodAndPrompts": {
+            "values": {
+              "summarizationMethod": "stuff",
+              "prompt": "\"{text}\"\n\nBased on the topic above, create a captivating short tale for kids, whisking them away to magical lands brimming with wisdom. Explore diverse themes in a fun and simple way, weaving in valuable messages. Dive into cultural adventures with lively language that sparks curiosity.\n\nIMPORTANT: Write the story in the SAME language as the topic above. If the topic is in Arabic, write the story in Arabic. If the topic is in English, write the story in English.\n\nOutput ONLY the story text. Do NOT include any introductions, notes, explanations, moral lessons, or meta commentary. Just the story itself.\n\n(Approximately 900 characters)\n\nCONCISE SUMMARY:"
+            }
+          }
+        }
+      },
+      "id": "12095c6c-d84d-4024-a08e-4293bc75645f",
+      "name": "Create a Story for Kids",
+      "type": "@n8n/n8n-nodes-langchain.chainSummarization",
+      "typeVersion": 2,
+      "position": [
+        1296,
+        1056
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "maxTokensToSample": 4096,
+          "temperature": 0.7
+        }
+      },
+      "id": "78234e5f-0f37-485a-a540-2cde20787d6f",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1264,
+        1232
+      ]
+    },
+    {
+      "parameters": {
+        "chunkSize": 500,
+        "chunkOverlap": 300,
+        "options": {}
+      },
+      "id": "5c847479-600e-46d7-8487-6c4591c50793",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        1072,
+        1040
+      ],
+      "id": "5a64e2ba-e400-4bfa-87dd-66445e74878e",
+      "name": "Telegram Trigger",
+      "webhookId": "0c22ea3b-2d9a-4773-a5c4-60a6521353dd"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.response.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1728,
+        1040
+      ],
+      "id": "6087ef9e-5ae1-41ae-a8c8-ed08ed09f578",
+      "name": "Send a text message",
+      "webhookId": "132d0df8-0e86-43c1-81a4-de04d2a9ace4"
+    },
+    {
+      "parameters": {
+        "height": 512,
+        "width": 928,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1024,
+        896
+      ],
+      "typeVersion": 1,
+      "id": "6a579a4c-f28e-4142-9e33-bd7fc1f646e3",
+      "name": "Sticky Note"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [],
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "description": "Creates Arabic children stories via Telegram. User sends a topic -> Groq generates story -> translates to Arabic -> posts to Telegram channel",
+  "scopes": [
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true
+}
