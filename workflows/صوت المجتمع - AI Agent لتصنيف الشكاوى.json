@@ -1,0 +1,171 @@
+{
+  "id": "FvHx8DMHlzxDi6Cw",
+  "name": "صوت المجتمع - AI Agent لتصنيف الشكاوى",
+  "active": true,
+  "isArchived": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "connections": {
+    "استقبال الشكوى (Webhook)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - تصنيف الشكوى",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - تصنيف الشكوى",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تنسيق الإخراج (Structured Output)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent - تصنيف الشكوى",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - تصنيف الشكوى": {
+      "main": [
+        [
+          {
+            "node": "تجهيز الصف لـ Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تجهيز الصف لـ Supabase": {
+      "main": [
+        [
+          {
+            "node": "تخزين بـ Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تخزين بـ Supabase": {
+      "main": [
+        [
+          {
+            "node": "الرد على الفورم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sawt-complaint",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "fed12908-6fe5-496f-a993-e935c86470e6",
+      "name": "استقبال الشكوى (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [160, 272],
+      "webhookId": "ffafc00b-b299-46fd-ab8b-e5f6b05cf1c9"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "1b63167f-efa2-480c-a986-81b7eefc70c2",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [336, 416]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": {\n      \"type\": \"string\",\n      \"enum\": [\"كهرباء وإنارة\", \"مياه وصرف صحي\", \"سفلتة وطرق\", \"نظافة وبيئة\", \"حدائق ومرافق\", \"خدمات أخرى\"]\n    },\n    \"urgency\": {\n      \"type\": \"string\",\n      \"enum\": [\"عالي\", \"متوسط\", \"منخفض\"]\n    },\n    \"summary\": {\n      \"type\": \"string\",\n      \"description\": \"ملخص سطر واحد بالعربي\"\n    }\n  },\n  \"required\": [\"category\", \"urgency\", \"summary\"]\n}"
+      },
+      "id": "6fa80bf4-81dd-48a6-b548-d8732a6fa268",
+      "name": "تنسيق الإخراج (Structured Output)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [512, 416]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.complaint }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "أنت مصنّف شكاوى مجتمعية محترف. اقرأ نص الشكوى بالعربي (قد يكون غير واضح أو ناقص أو بلهجة عامية) وحدد: نوع الشكوى، درجة الإلحاح، وملخص سطر واحد. إذا كان النص غامضاً، استخدم أفضل تقدير منطقي ولا ترفض التصنيف."
+        }
+      },
+      "id": "bc6dd98b-eb43-4199-b71f-57d6faee6cb8",
+      "name": "AI Agent - تصنيف الشكوى",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [352, 272]
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsed = $input.first().json.output;\nconst webhookData = $('استقبال الشكوى (Webhook)').first().json.body;\n\nreturn [{\n  json: {\n    complaint_text: webhookData.complaint,\n    neighborhood: webhookData.neighborhood || 'غير محدد',\n    name: webhookData.name || null,\n    contact: webhookData.contact || null,\n    category: parsed.category,\n    urgency: parsed.urgency,\n    summary: parsed.summary,\n    created_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "9e3e6117-c2a5-4c97-a086-ccc951f75fe3",
+      "name": "تجهيز الصف لـ Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [704, 272]
+    },
+    {
+      "parameters": {
+        "tableId": "complaints",
+        "dataToSend": "autoMapInputData"
+      },
+      "id": "a1b3b4e9-75da-4d0c-a535-96f70a4c82df",
+      "name": "تخزين بـ Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [880, 272]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"tracking_id\": \"{{ $json.id }}\"\n}",
+        "options": {}
+      },
+      "id": "debcc9db-d22c-4e0a-98e0-ed820b955502",
+      "name": "الرد على الفورم",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [1200, 272]
+    }
+  ],
+  "nodeGroups": [],
+  "tags": [],
+  "createdAt": "2026-08-02T07:40:02.471Z",
+  "updatedAt": "2026-08-02T12:37:56.851Z"
+}
