@@ -1,0 +1,187 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        2720,
+        544
+      ],
+      "id": "d44c05d8-24b9-4a03-a5fb-7c3cffe6ce0e",
+      "name": "Telegram Trigger",
+      "webhookId": "defb9229-fb09-471e-8472-5de27282f596",
+      "credentials": {
+        "telegramApi": {
+          "id": "4Qf7e7Ga4fJGUZ0W",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://google-map-scraper1.p.rapidapi.com/api/places/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.message.text }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "google-map-scraper1.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "7ab6a1be3emsh175e468e9bf5978p11711ajsn76015c23a07a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2912,
+        544
+      ],
+      "id": "a529af12-6099-406f-9ec5-353466331d03",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        3104,
+        544
+      ],
+      "id": "0f316ecf-1ef9-4315-960d-e559c4f0c2f9",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "44022f10-4362-4def-9fd3-4dc63f7d3ac7",
+              "leftValue": "={{ $json.phone_number }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        3296,
+        544
+      ],
+      "id": "181515a3-a679-42b9-9b8a-c09aaf623618",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=🏢 {{ $json.name }}\n📞 {{ $json.phone_number }}\n📍 {{ $json.address }}\n🌐 {{ $json.website || 'لا يوجد' }}\n🕐 {{ $json.opening_status || 'غير متوفر' }}\n⭐ {{ $json.rating || 'لا يوجد تقييم' }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "None"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3520,
+        544
+      ],
+      "id": "b4ecdf99-ea4c-4698-b2b8-e28e5c588e4f",
+      "name": "Send a text message",
+      "webhookId": "f29c6da7-9c02-42dc-afb9-6fbbb006e75b",
+      "credentials": {
+        "telegramApi": {
+          "id": "4Qf7e7Ga4fJGUZ0W",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e6d3a8e868c03938cce3b97be3aef96d4ce98b8db70d19a55dd2433b5ffcb750"
+  }
+}
