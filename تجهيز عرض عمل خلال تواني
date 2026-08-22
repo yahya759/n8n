@@ -1,0 +1,290 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-proposal-generator",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "72430758-4a0f-4baa-a3a5-c944744aa1c3",
+      "name": "Proposal Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        960,
+        416
+      ],
+      "webhookId": "f9f46dc4-231e-496d-8288-53b423e5a431"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\n\nif (!body.business_id) throw new Error('business_id is required');\nif (!body.business_name) throw new Error('business_name is required');\nif (!body.problem) throw new Error('problem is required');\n\nreturn [{ json: {\n  business_id: String(body.business_id),\n  business_name: String(body.business_name),\n  problem: String(body.problem).slice(0, 10000),\n  estimated_loss: Number(body.estimated_loss ?? 0),\n  recommended_solution: String(body.recommended_solution ?? ''),\n  created_at: new Date().toISOString()\n} }];"
+      },
+      "id": "0078988d-f638-4266-8a6f-b4751d5065a4",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json) }}",
+        "options": {
+          "systemMessage": "أنت AI Proposal Generator متخصص في تحويل مشاكل الشركات إلى عروض حلول AI واضحة وقابلة للبيع.\n\nحلل بيانات العميل وأنشئ Proposal احترافي.\n\nلا تخترع معلومات غير موجودة.\nلا تعد بنتائج مضمونة.\nإذا لم توجد معلومات كافية عن السعر أو المدة، استخدم null بدل اختراعها.\n\nأخرج JSON فقط:\n{\n  \"problem\": \"\",\n  \"proposed_solution\": \"\",\n  \"scope\": [],\n  \"deliverables\": [],\n  \"business_value\": \"\",\n  \"estimated_price\": null,\n  \"estimated_duration\": null,\n  \"roi_explanation\": \"\",\n  \"proposal_title\": \"\",\n  \"proposal_summary\": \"\",\n  \"next_step\": \"\"\n}\n\nركز على قيمة المشروع للعميل وليس على استعراض التقنيات."
+        }
+      },
+      "id": "9c10dcee-fea6-4e0c-8fc5-d68788554adc",
+      "name": "AI Proposal Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "8e84cbc4-6a15-4694-9911-1f5c2145c2a0",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        576
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output ?? $json.text ?? $json.response ?? '';\nif (!raw) throw new Error('AI returned empty response');\n\nlet result;\ntry {\n  result = typeof raw === 'string'\n    ? JSON.parse(raw.replace(/```json/gi, '').replace(/```/g, '').trim())\n    : raw;\n} catch {\n  throw new Error('Invalid AI JSON');\n}\n\nif (!result.proposed_solution || !Array.isArray(result.scope) || !Array.isArray(result.deliverables)) {\n  throw new Error('Invalid proposal structure');\n}\n\nreturn [{ json: {\n  ...result,\n  business_id: $('Validate Input').item.json.business_id,\n  business_name: $('Validate Input').item.json.business_name,\n  status: 'draft',\n  created_at: new Date().toISOString()\n} }];"
+      },
+      "id": "7ac0eb1c-4c47-4589-9581-d15cd2e538fc",
+      "name": "Validate Proposal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "proposals",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "business_id",
+              "fieldValue": "={{ $json.business_id }}"
+            },
+            {
+              "fieldId": "business_name",
+              "fieldValue": "={{ $json.business_name }}"
+            },
+            {
+              "fieldId": "proposal_title",
+              "fieldValue": "={{ $json.proposal_title }}"
+            },
+            {
+              "fieldId": "problem",
+              "fieldValue": "={{ $json.problem }}"
+            },
+            {
+              "fieldId": "proposed_solution",
+              "fieldValue": "={{ $json.proposed_solution }}"
+            },
+            {
+              "fieldId": "scope",
+              "fieldValue": "={{ JSON.stringify($json.scope) }}"
+            },
+            {
+              "fieldId": "deliverables",
+              "fieldValue": "={{ JSON.stringify($json.deliverables) }}"
+            },
+            {
+              "fieldId": "business_value",
+              "fieldValue": "={{ $json.business_value }}"
+            },
+            {
+              "fieldId": "estimated_price",
+              "fieldValue": "={{ $json.estimated_price }}"
+            },
+            {
+              "fieldId": "estimated_duration",
+              "fieldValue": "={{ $json.estimated_duration }}"
+            },
+            {
+              "fieldId": "roi_explanation",
+              "fieldValue": "={{ $json.roi_explanation }}"
+            },
+            {
+              "fieldId": "proposal_summary",
+              "fieldValue": "={{ $json.proposal_summary }}"
+            },
+            {
+              "fieldId": "next_step",
+              "fieldValue": "={{ $json.next_step }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "draft"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $json.created_at }}"
+            }
+          ]
+        }
+      },
+      "id": "c8c7557e-032d-4d4f-8a15-f09476ad34a8",
+      "name": "Save Proposal",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        416
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ri1jrasJyrULkkyj",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, status: 'draft', proposal_title: $('Validate Proposal').item.json.proposal_title, problem: $('Validate Proposal').item.json.problem, proposed_solution: $('Validate Proposal').item.json.proposed_solution, scope: $('Validate Proposal').item.json.scope, deliverables: $('Validate Proposal').item.json.deliverables, estimated_price: $('Validate Proposal').item.json.estimated_price, estimated_duration: $('Validate Proposal').item.json.estimated_duration, roi_explanation: $('Validate Proposal').item.json.roi_explanation, next_step: $('Validate Proposal').item.json.next_step } }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "591c7b89-07d6-4984-8bd6-6fe7dc1a8831",
+      "name": "Return Proposal",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2080,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Money Leak Report\n      ↓\nAI يحلل المشكلة\n      ↓\nيختار الحل المناسب\n      ↓\nيحدد Scope العمل\n      ↓\nيقدّر السعر والمدة\n      ↓\nيولد Proposal احترافي\n      ↓\nSupabase\n      ↓\nترجع لك نسخة جاهزة ترسلها للعميل\n\n\nيعني مثال:\n\nالمشكلة: الصالون يخسر عملاء بسبب عدم متابعة الـLeads\nالحل: AI Lead Recovery System\nالمخرجات: WhatsApp Follow-up + Dashboard + Analytics\nالمدة: X\nالسعر: X\nROI المتوقع: X",
+        "height": 448
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        624,
+        352
+      ],
+      "typeVersion": 1,
+      "id": "edd367c2-87b6-4f7c-9667-51687638a9a4",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Proposal Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "AI Proposal Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Proposal Agent": {
+      "main": [
+        [
+          {
+            "node": "Validate Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Proposal Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Proposal": {
+      "main": [
+        [
+          {
+            "node": "Save Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Proposal": {
+      "main": [
+        [
+          {
+            "node": "Return Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "0d41135dd2fe29834dbd452454a88c10355c19d9559410558cada86305941962"
+  }
+}
