@@ -1,0 +1,443 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "id": "2035d8b8-81c8-4602-8168-e40afc172669",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        784
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "p9sox6uJJzJWHCDx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {}
+      },
+      "id": "2412fa06-dfe5-40a4-83ca-4e6740f00bc4",
+      "name": "Get Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1616,
+        784
+      ],
+      "webhookId": "36432c7f-c4b3-47f1-805c-3639d6bf5d74",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "p9sox6uJJzJWHCDx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "email_id",
+              "name": "email_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "sender",
+              "name": "sender",
+              "value": "={{ $json.headers?.from || $json.from?.value?.[0]?.address || 'Unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "subject",
+              "name": "subject",
+              "value": "={{ $json.headers?.subject || $json.subject || 'No Subject' }}",
+              "type": "string"
+            },
+            {
+              "id": "email_text",
+              "name": "email_text",
+              "value": "={{ $json.text || $json.textPlain || $json.snippet || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "received_at",
+              "name": "received_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "50aa770e-2fa9-4477-899d-0a25ee51ef18",
+      "name": "Extract Email Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1808,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=أنت AI Email Classifier.\n\nحلل الإيميل التالي:\n\nالمرسل:\n{{ $json.sender }}\n\nالموضوع:\n{{ $json.subject }}\n\nمحتوى الإيميل:\n{{ $json.email_text }}\n\nصنف الإيميل إلى واحدة فقط:\nurgent\nfollow_up\nunimportant\n\nالقواعد:\nurgent = يحتاج تصرف سريع، موعد قريب، عميل مهم، مشكلة، دفع، أمان، أو شيء لا يجب تأجيله.\nfollow_up = يحتاج متابعة أو رد لكن ليس عاجلاً.\nunimportant = Newsletter، عروض، رسائل تسويقية أو محتوى لا يحتاج أي إجراء.\n\nأعطني JSON فقط بدون Markdown:\n{\n  \"category\": \"urgent\",\n  \"summary\": \"ملخص عربي مختصر جدًا بسطرين كحد أقصى\",\n  \"priority\": 3\n}\n\npriority:\n3 = urgent\n2 = follow_up\n1 = unimportant",
+        "options": {}
+      },
+      "id": "658b741a-02a0-44cc-a8be-1892e6977631",
+      "name": "Groq AI Classifier",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2048,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.6-27b",
+        "options": {}
+      },
+      "id": "04cabe60-8dda-477f-83bc-7c5c1211d725",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        944
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $('Extract Email Data').first().json;\nconst aiOutput = $json.output || '';\n\nlet parsed;\n\ntry {\n  const cleaned = aiOutput\n    .replace(/```json/g, '')\n    .replace(/```/g, '')\n    .trim();\n\n  parsed = JSON.parse(cleaned);\n} catch (error) {\n  parsed = {\n    category: 'follow_up',\n    summary: aiOutput.substring(0, 300),\n    priority: 2\n  };\n}\n\nreturn [\n  {\n    json: {\n      email_id: original.email_id,\n      sender: original.sender,\n      subject: original.subject,\n      summary: parsed.summary || 'لا يوجد ملخص',\n      category: parsed.category || 'follow_up',\n      priority: parsed.priority || 2,\n      received_at: original.received_at,\n      sent_to_telegram: false\n    }\n  }\n];"
+      },
+      "id": "5dfd437b-8208-4046-84a2-60ef006c6507",
+      "name": "Parse AI Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "email_summaries",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email_id",
+              "fieldValue": "={{ $json.email_id }}"
+            },
+            {
+              "fieldId": "sender",
+              "fieldValue": "={{ $json.sender }}"
+            },
+            {
+              "fieldId": "subject",
+              "fieldValue": "={{ $json.subject }}"
+            },
+            {
+              "fieldId": "summary",
+              "fieldValue": "={{ $json.summary }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $json.category }}"
+            },
+            {
+              "fieldId": "priority",
+              "fieldValue": "={{ $json.priority }}"
+            },
+            {
+              "fieldId": "received_at",
+              "fieldValue": "={{ $json.received_at }}"
+            },
+            {
+              "fieldId": "sent_to_telegram",
+              "fieldValue": "={{ $json.sent_to_telegram }}"
+            }
+          ]
+        }
+      },
+      "id": "953e519f-fd98-4c03-bbbb-c73c3be5a299",
+      "name": "Save to Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        784
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ri1jrasJyrULkkyj",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "49256cd3-60a3-4e73-b20b-9f4ba07927ab",
+      "name": "Every Morning 7 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "email_summaries",
+        "returnAll": true
+      },
+      "id": "efac0ab4-cc75-4834-aa09-4fce69772b1a",
+      "name": "Get Pending Emails",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        1104
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ri1jrasJyrULkkyj",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(item => item.json);\n\nconst now = new Date();\nconst todayStart = new Date(now);\ntodayStart.setHours(0, 0, 0, 0);\n\nconst yesterdayStart = new Date(todayStart);\nyesterdayStart.setDate(yesterdayStart.getDate() - 1);\n\nconst emails = rows.filter(row => {\n  if (row.sent_to_telegram === true) return false;\n  if (!row.received_at) return false;\n\n  const date = new Date(row.received_at);\n\n  return date >= yesterdayStart && date < todayStart;\n});\n\nemails.sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));\n\nconst urgent = emails.filter(e => e.category === 'urgent');\nconst followUp = emails.filter(e => e.category === 'follow_up');\nconst unimportant = emails.filter(e => e.category === 'unimportant');\n\nlet message = '📬 *ملخص إيميلاتك*\\n';\nmessage += '━━━━━━━━━━━━━━\\n';\nmessage += `📊 إجمالي الإيميلات: *${emails.length}*\\n\\n`;\n\nmessage += `🔴 *عاجل — ${urgent.length}*\\n`;\n\nif (urgent.length === 0) {\n  message += 'لا يوجد إيميلات عاجلة ✅\\n';\n} else {\n  urgent.forEach((email, index) => {\n    message += `\\n*${index + 1}. ${email.subject || 'بدون موضوع'}*\\n`;\n    message += `👤 ${email.sender || 'غير معروف'}\\n`;\n    message += `📝 ${email.summary || ''}\\n`;\n  });\n}\n\nmessage += `\\n🟡 *للمتابعة — ${followUp.length}*\\n`;\n\nif (followUp.length === 0) {\n  message += 'لا يوجد إيميلات للمتابعة.\\n';\n} else {\n  followUp.forEach((email, index) => {\n    message += `\\n*${index + 1}. ${email.subject || 'بدون موضوع'}*\\n`;\n    message += `👤 ${email.sender || 'غير معروف'}\\n`;\n    message += `📝 ${email.summary || ''}\\n`;\n  });\n}\n\nmessage += `\\n⚪ *غير مهم — ${unimportant.length}*\\n`;\n\nif (unimportant.length === 0) {\n  message += 'لا يوجد.\\n';\n} else {\n  unimportant.forEach((email, index) => {\n    message += `${index + 1}. ${email.subject || 'بدون موضوع'} — ${email.summary || ''}\\n`;\n  });\n}\n\nmessage += '\\n━━━━━━━━━━━━━━\\n';\nmessage += '🤖 *تم التلخيص والتصنيف بواسطة Groq AI*';\n\nreturn [\n  {\n    json: {\n      telegramMessage: message,\n      processedEmails: emails\n    }\n  }\n];"
+      },
+      "id": "da34ff31-7bb5-45fb-8f9d-54495066e284",
+      "name": "Build Telegram Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "8005911221",
+        "text": "={{ $json.telegramMessage }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "beb86733-5fe7-43e1-8e4f-12fbfa64e038",
+      "name": "Send Summary to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2096,
+        1104
+      ],
+      "webhookId": "6cd46f3e-9eed-4ed6-a1c9-36d992beae98",
+      "credentials": {
+        "telegramApi": {
+          "id": "VneCa0QQ0PAyY2Te",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Build Telegram Summary').first().json;\n\nreturn data.processedEmails.map(email => ({\n  json: {\n    id: email.id,\n    sent_to_telegram: true\n  }\n}));"
+      },
+      "id": "dbc5e982-c865-4207-9364-2e18283d8d26",
+      "name": "Prepare Supabase Updates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "email_summaries"
+      },
+      "id": "c36590d5-b594-4ea4-91bd-cdd2f811a066",
+      "name": "Mark Emails as Sent",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        1104
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ri1jrasJyrULkkyj",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Email": {
+      "main": [
+        [
+          {
+            "node": "Extract Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Email Data": {
+      "main": [
+        [
+          {
+            "node": "Groq AI Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq AI Classifier": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Groq AI Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Result": {
+      "main": [
+        [
+          {
+            "node": "Save to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every Morning 7 AM": {
+      "main": [
+        [
+          {
+            "node": "Get Pending Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pending Emails": {
+      "main": [
+        [
+          {
+            "node": "Build Telegram Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Telegram Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Summary to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Summary to Telegram": {
+      "main": [
+        [
+          {
+            "node": "Prepare Supabase Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Supabase Updates": {
+      "main": [
+        [
+          {
+            "node": "Mark Emails as Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0d41135dd2fe29834dbd452454a88c10355c19d9559410558cada86305941962"
+  }
+}
