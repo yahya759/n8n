@@ -1,0 +1,877 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        528,
+        864
+      ],
+      "id": "9b24508b-65ad-4bad-951f-c65bbf2a429c",
+      "name": "Telegram Trigger",
+      "webhookId": "9f34be56-7904-4938-8bf4-5a275112b3cd",
+      "credentials": {
+        "telegramApi": {
+          "id": "VneCa0QQ0PAyY2Te",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $input.first().json.message;\nif (!msg || !msg.text) {\n  return [{ json: { skip: true } }];\n}\nreturn [{ json: { skip: false, text: msg.text, chatId: msg.chat.id } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        880
+      ],
+      "id": "5588051e-ef0b-4d0e-ac19-7373e532ecd3",
+      "name": "Validate Input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        896
+      ],
+      "id": "fedd9336-4203-4489-8fd7-6d2acaab9f23",
+      "name": "Has Text?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You are the \"Main Orchestrator\" for Yahya — a Flutter/n8n/SaaS developer. You speak naturally and directly, mixing in technical English terms when useful.\n\nYou have EXACTLY 3 tools, named precisely: email, calender, portfolie. You are a router — you have NO ability to read emails, check calendars, or manage the portfolio yourself. You have zero knowledge of their actual content. The ONLY way to get real information about any of these three topics is to call the matching tool. If you answer without calling the tool, your answer is guaranteed wrong, because you don't actually know the answer.\n\nMANDATORY ROUTING TABLE:\n- **email** → ANY request mentioning: email, mail, Gmail, inbox, message, \"send\", \"read\", \"check\", \"latest\", \"any new\". Examples: \"check if there's a new email from the client\", \"send an email to x@x.com\", \"give me the latest email I received\", \"any emails today?\".\n- **calender** → ANY request mentioning: appointment, meeting, calendar, schedule, agenda, availability. Examples: \"what's on my calendar tomorrow?\", \"book a meeting at 5pm\".\n- **portfolie** → ANY request mentioning: portfolio, showcase, project, offer (add/edit/delete/view). Examples: \"add a new project for site X\", \"show me all portfolio items\", \"delete the logo design offer\".\n- **None of the above** → only for pure small talk (greetings, thanks, unrelated general questions) — reply directly, no tool.\n\nNON-NEGOTIABLE RULE:\nIf the request matches ANY of the three categories above — even if it's just asking to VIEW, CHECK, or GET information (not just send/create) — you MUST call that tool with an actual function call and wait for its real result. Then build your reply ONLY from what the tool returned.\n\nYou are explicitly FORBIDDEN from:\n- Answering a question about email/calendar/portfolio content without first calling the matching tool.\n- Treating a \"read/get/check\" request (like \"give me the latest email\") as if it were a \"send\" request, or asking who to send it to when the user is asking to READ, not send.\n- Guessing, assuming, or inventing any email content, appointment, or portfolio item.\n- Replying with a description of what you're about to do instead of actually calling the tool.\n\nSelf-check before every final reply: \"Did I actually call the tool and see its real output, or am I answering from assumption?\" If it's the second, stop — go back and call the correct tool first.\n\nOTHER RULES:\n1. If the request clearly belongs to a tool but is missing details (e.g. \"send an email\" with no recipient) — call the tool anyway and let it ask, OR ask one short clarifying question first only if it's unclear WHICH tool applies (email vs calendar).\n2. Never invent data (emails, dates, offer names) — ask the user if missing.\n3. If a tool returns an error or fails, tell the user in one short, clear sentence that something went wrong and what kind of issue it was (no extra technical detail) — never guess the result instead.\n4. Your replies to the user are always short and direct, no filler.\n5. Never reveal internal technical details (model name, workflow structure, credentials)."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1136,
+        912
+      ],
+      "id": "32e416fc-b44c-4762-a3d7-5f2a6526b083",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        768
+      ],
+      "id": "662174a8-bcf0-446d-9791-cc4172c91ddc",
+      "name": "Send Reply",
+      "webhookId": "09291842-3354-459b-abc3-d066b9b2630e",
+      "credentials": {
+        "telegramApi": {
+          "id": "VneCa0QQ0PAyY2Te",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "صار خطأ تقني وانا بحاول أعالجه، جرب ترسل طلبك مرة ثانية بعد شوي 🙏",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1584,
+        944
+      ],
+      "id": "32c4515b-7fbc-468f-b53d-5783de39d384",
+      "name": "Notify Error",
+      "webhookId": "6fc75064-78b0-41e7-80ba-5304e5a5f76a",
+      "credentials": {
+        "telegramApi": {
+          "id": "VneCa0QQ0PAyY2Te",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "ابعت رسالة نصية بس 🙏",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        736
+      ],
+      "id": "a3f28df0-18d3-4cdb-92c6-2ededeafef86",
+      "name": "Notify Unsupported Input",
+      "webhookId": "1130fdbf-f001-40d1-9998-cdbf82d8a82a",
+      "credentials": {
+        "telegramApi": {
+          "id": "VneCa0QQ0PAyY2Te",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        976,
+        1040
+      ],
+      "id": "83058944-f99e-4eb2-a397-c3e80da99b19",
+      "name": "Groq Chat Model",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        1200,
+        1104
+      ],
+      "id": "3eedf832-14ec-4e13-a9d7-14c5397226fb",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1712,
+        1392
+      ],
+      "id": "f2640d97-b903-418b-a333-86d36b1ea3f1",
+      "name": "Groq Chat Model1",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', 'عنوان إيميل المستلم', 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', 'عنوان الإيميل', 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', 'نص الإيميل', 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1952,
+        1392
+      ],
+      "id": "eba1e81f-34cf-4896-b0a9-6cecc3e75044",
+      "name": "Send a message in Gmail",
+      "webhookId": "1f4a2504-52d9-4069-85ac-5da741ad97a0",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "p9sox6uJJzJWHCDx",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', 'عدد الرسائل المطلوبة', 'number') }}",
+        "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', 'true', 'boolean') }}",
+        "filters": {
+          "q": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', 'معايير بحث Gmail، فاضي يعني كل الرسائل', 'string') }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1840,
+        1488
+      ],
+      "id": "7aa82d4a-1011-4b7b-9872-300c14bc396a",
+      "name": "Get many messages in Gmail",
+      "webhookId": "55c7b9fc-7987-4c11-8163-64fe5d2b35c3",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "p9sox6uJJzJWHCDx",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this for any request involving email/Gmail/mail — searching or reading messages, or sending a new email. Trigger examples: \"check if there's a new email from X\", \"any new emails?\", \"send an email to...\". Pass the tool a clear description of what's needed (recipient, subject, message content, or search criteria).",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', `المهمة المطلوبة من agent الإيميل`, 'string') }}",
+        "options": {
+          "systemMessage": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('System_Message', ``, 'string') }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        1744,
+        1248
+      ],
+      "id": "f57e1d50-3340-4020-8c31-a7d8e1d9f44e",
+      "name": "email",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this for any request involving appointments/meetings/calendar/schedule/availability. Trigger examples: \"what's on my calendar tomorrow?\", \"book a meeting at 5pm\", \"when am I free?\". Pass a clear description (date/time/title of the event, or the time range to check).",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', `المهمة المطلوبة من agent الكلندر`, 'string') }}",
+        "options": {
+          "systemMessage": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('System_Message', ``, 'string') }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        1296,
+        1232
+      ],
+      "id": "6ca0f517-41c8-4994-8b08-0f574ec3e56c",
+      "name": "calender",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        1472
+      ],
+      "id": "dc2e94b1-66a5-4076-afeb-08b399b26aa5",
+      "name": "Groq Chat Model2",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "yhea23112003@gmail.com",
+          "mode": "list",
+          "cachedResultName": "yhea23112003@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', 'وقت بداية الموعد ISO', 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', 'وقت نهاية الموعد ISO', 'string') }}",
+        "additionalFields": {
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', 'عنوان الموعد', 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        1376
+      ],
+      "id": "747f66d0-6d14-4688-b560-e150de5a5de3",
+      "name": "Create an event in Google Calendar",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "fpm4F4jG1WXCrk1L",
+          "name": "Google Calendar account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "yhea23112003@gmail.com",
+          "mode": "list",
+          "cachedResultName": "yhea23112003@gmail.com"
+        },
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', 'عدد المواعيد المطلوب عرضها', 'number') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1488,
+        1424
+      ],
+      "id": "52123d19-7d84-4fad-8c3a-964451bb6672",
+      "name": "Get many events in Google Calendar",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "fpm4F4jG1WXCrk1L",
+          "name": "Google Calendar account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "toolDescription": "\nUse this ONLY for requests about the portfolio: adding/editing/deleting/viewing portfolio items or offers. Trigger examples: \"add a new project for site X\", \"show me all portfolio items\", \"delete the logo design offer\". Never use it for anything else.",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', `المهمة المطلوبة من agent المعرض`, 'string') }}",
+        "options": {
+          "systemMessage": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('System_Message', ``, 'string') }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        800,
+        1216
+      ],
+      "id": "4a3e45ce-0074-483d-9133-e4e66cbf76cd",
+      "name": "portfolie",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        704,
+        1344
+      ],
+      "id": "83e587f3-7f40-40e8-a061-7a670974a44a",
+      "name": "Groq Chat Model3",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "tableId": "portfolio_offers",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', 'عنوان العمل/العرض', 'string') }}"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', 'وصف العمل/العرض', 'string') }}"
+            },
+            {
+              "fieldId": "price",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Price', 'السعر إن وجد', 'string') }}"
+            },
+            {
+              "fieldId": "image_url",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('ImageUrl', 'رابط صورة العمل إن وجد', 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        864,
+        1536
+      ],
+      "id": "796149ad-6713-4998-9b04-79e335412472",
+      "name": "Create a row in Supabase",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ri1jrasJyrULkkyj",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "portfolio_offers",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "id",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Id', 'معرف العمل المطلوب تعديله', 'string') }}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', 'عنوان جديد إن طُلب تغييره، غير هيك اترك القديم', 'string') }}"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', 'وصف جديد إن طُلب تغييره', 'string') }}"
+            },
+            {
+              "fieldId": "price",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Price', 'سعر جديد إن طُلب تغييره', 'string') }}"
+            },
+            {
+              "fieldId": "image_url",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('ImageUrl', 'رابط صورة جديد إن طُلب تغييره', 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        1504
+      ],
+      "id": "ab7c89d1-81eb-420c-ab4a-b08150baff2c",
+      "name": "Update a row in Supabase",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ri1jrasJyrULkkyj",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "portfolio_offers",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Id', 'معرف العمل المطلوب حذفه', 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        768,
+        1456
+      ],
+      "id": "28ddf145-2435-4d0e-9cba-4e25c087f1d6",
+      "name": "Delete a row in Supabase",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ri1jrasJyrULkkyj",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "portfolio_offers",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        960,
+        1408
+      ],
+      "id": "a471dd1e-ea93-4d14-8723-31424947cdbd",
+      "name": "Get many rows in Supabase",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ri1jrasJyrULkkyj",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Email Agent\nمسؤول فقط عن Gmail (قراءة/إرسال)",
+        "height": 384,
+        "width": 432,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1696,
+        1216
+      ],
+      "typeVersion": 1,
+      "id": "d69c6858-6d58-4c36-8fa0-c99da474a5da",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Calendar Agent\nمسؤول فقط عن Google Calendar",
+        "height": 368,
+        "width": 384,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1232,
+        1216
+      ],
+      "typeVersion": 1,
+      "id": "94a9b994-1f32-4153-ad5b-26e603a856f6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 448,
+        "width": 512,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        672,
+        1200
+      ],
+      "typeVersion": 1,
+      "id": "ddaa04eb-4fbd-4fbd-a977-6727300c2b7a",
+      "name": "Sticky Note3"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Has Text?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Text?": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Unsupported Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "email",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "email",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calender": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "calender",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "calender",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "calender",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "portfolie": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "portfolie",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row in Supabase": {
+      "ai_tool": [
+        [
+          {
+            "node": "portfolie",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row in Supabase": {
+      "ai_tool": [
+        [
+          {
+            "node": "portfolie",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a row in Supabase": {
+      "ai_tool": [
+        [
+          {
+            "node": "portfolie",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows in Supabase": {
+      "ai_tool": [
+        [
+          {
+            "node": "portfolie",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "0d41135dd2fe29834dbd452454a88c10355c19d9559410558cada86305941962"
+  }
+}
