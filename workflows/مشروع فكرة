@@ -1,0 +1,621 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "قيّم فكرة مشروعك",
+        "formDescription": "اكتب فكرتك (موقع أو تطبيق) بجملة أو فقرة بسيطة، وحط بريدك الإلكتروني — رح يوصلك تقرير تحليل كامل خلال دقيقة أو دقيقتين.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "البريد الإلكتروني",
+              "fieldType": "email",
+              "placeholder": "you@example.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "فكرة المشروع",
+              "fieldType": "textarea",
+              "placeholder": "مثال: تطبيق يساعد أصحاب الصالونات يدير حجوزاتهم عبر واتساب تلقائيًا",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "قيّم فكرتي"
+        }
+      },
+      "id": "166de1d6-4131-4e90-ad23-59c575138855",
+      "name": "استلام الفكرة",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -1056,
+        336
+      ],
+      "webhookId": "3ee4da5c-5880-4e55-97bd-ab2c60aacd19"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "idea",
+              "type": "string",
+              "value": "={{ $json['فكرة المشروع'] }}"
+            },
+            {
+              "id": "a2",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $json['البريد الإلكتروني'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6ce683e8-2bb4-4040-b85d-bfa664057afc",
+      "name": "تجهيز المدخلات",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -864,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'فكرة المشروع: ' + $('تجهيز المدخلات').item.json.idea }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "أنت مستشار تقييم أفكار مشاريع تقنية (مواقع أو تطبيقات) بخبرة عميقة بالسوق. مهمتك تحليل وضوح الفكرة يلي بيرسلها المستخدم ووجود مشكلة حقيقية تحلها. ما عندك أي tools — جاوب مباشرة من تحليلك بدون ما تحاول تبحث أو تتحقق من أي شي خارجي. حقل rating لازم يكون بالضبط واحدة من هاد الثلاث قيم: قوية، تحتاج تعديل، ضعيفة."
+        }
+      },
+      "id": "47275e8e-02eb-4e05-936e-30b429e9a3da",
+      "name": "وكيل التقييم الأولي",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "ae4d7bc4-38f4-4679-94e5-b0bed15760a0",
+      "name": "Groq Model - تقييم",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        336
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"rating\": { \"type\": \"string\", \"enum\": [\"قوية\", \"تحتاج تعديل\", \"ضعيفة\"] },\n    \"reason\": { \"type\": \"string\" }\n  },\n  \"required\": [\"rating\", \"reason\"]\n}"
+      },
+      "id": "c7e9cfad-9628-45d7-a345-4dcdfa11955e",
+      "name": "Output Parser - تقييم",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -496,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'فكرة المشروع: ' + $('تجهيز المدخلات').item.json.idea }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "أنت محلل سوق ومنافسين. عندك أداة search_competitors تقدر تستخدمها تبحث عالإنترنت عن مشاريع أو منتجات مشابهة لفكرة المستخدم. استخدم الأداة مرة أو مرتين كحد أقصى بـ query مركّز قبل ما تجاوب — ما تستخدمها أكتر من هيك. بعد ما تجمع نتائج كافية، حدد أهم 3 إلى 5 منافسين حقيقيين ظهروا فعليًا بنتائج البحث. لو ما لقيت منافسين واضحين بالنتائج، قول هيك صراحة بحقل gap بدل ما تخترع أسماء منافسين مو موجودين فعليًا. وضح الفجوة يلي فكرة المستخدم ممكن تسدها مقارنة بالمنافسين.",
+          "maxIterations": 3
+        }
+      },
+      "id": "8ce8bfb6-23c1-4a64-96d2-7655d197d20b",
+      "name": "وكيل البحث والمنافسين",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "19ee6ab6-2aea-4f09-94c2-aabaf5bac5eb",
+      "name": "Groq Model - بحث",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        368
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Searches the web for existing projects or products similar to a given idea, using the Tavily Search API. Use this when you need current information about potential competitors before answering.",
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ query: $fromAI('search_query', 'استعلام بحث مختصر ودقيق (بالإنجليزي غالبًا أفضل) للعثور على مشاريع أو منتجات مشابهة لفكرة المستخدم', 'string'), search_depth: 'basic', max_results: 5, include_answer: true }) }}"
+      },
+      "id": "5f1bda0a-ac3f-44ab-a5d0-1ad7a0d48c02",
+      "name": "أداة بحث Tavily",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        416
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "RuKqIB1Clsw9LgPQ",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"competitors\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": { \"type\": \"string\" },\n          \"what_they_do\": { \"type\": \"string\" }\n        }\n      }\n    },\n    \"gap\": { \"type\": \"string\" }\n  },\n  \"required\": [\"competitors\", \"gap\"]\n}"
+      },
+      "id": "ebf989ca-6c27-4f92-a1dd-e76a1ae4f51f",
+      "name": "Output Parser - منافسين",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'الفكرة: ' + $('تجهيز المدخلات').item.json.idea + ' --- تحليل المنافسين والفجوة: ' + JSON.stringify($('وكيل البحث والمنافسين').item.json.output) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "أنت مدير منتج تقني خبير. بناء على الفكرة وتحليل المنافسين والفجوة بالسوق المرسلة لك، اقترح أهم 3 إلى 5 فيتشرز أساسية لازم تكون بالنسخة الأولى MVP، مرتبة حسب الأهمية (priority: 1 هو الأهم). ما عندك tools، جاوب مباشرة من تحليلك."
+        }
+      },
+      "id": "c223863c-d165-44a9-91f9-3c1ec0c88fe1",
+      "name": "وكيل الفيتشرز",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "b0fc5399-7a59-466c-b8d9-17fa6c0d0867",
+      "name": "Groq Model - فيتشرز",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        720
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"features\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": { \"type\": \"string\" },\n          \"why\": { \"type\": \"string\" },\n          \"priority\": { \"type\": \"number\" }\n        }\n      }\n    }\n  },\n  \"required\": [\"features\"]\n}"
+      },
+      "id": "d296d436-5b5b-4da7-be84-f5ff688349e5",
+      "name": "Output Parser - فيتشرز",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -496,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'الفكرة: ' + $('تجهيز المدخلات').item.json.idea + ' --- الفيتشرز المقترحة: ' + JSON.stringify($('وكيل الفيتشرز').item.json.output) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "أنت مصمم UX ومنتج. بناء على الفكرة والفيتشرز المقترحة، اقترح وصف نصي عام لشكل الموقع أو التطبيق: أنواع الصفحات أو الشاشات الأساسية، وتدفق المستخدم الرئيسي خطوة بخطوة. هاد وصف نصي مش تصميم فعلي. ما عندك tools، جاوب مباشرة من تحليلك."
+        }
+      },
+      "id": "7c4adc9e-29aa-4292-bcde-49e1ebc5b08f",
+      "name": "وكيل الشكل العام",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "c3b39a86-6d03-49dc-ae05-87b818d2d6a5",
+      "name": "Groq Model - شكل عام",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        752
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"pages\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": { \"type\": \"string\" },\n          \"purpose\": { \"type\": \"string\" }\n        }\n      }\n    },\n    \"user_flow\": { \"type\": \"string\" }\n  },\n  \"required\": [\"pages\", \"user_flow\"]\n}"
+      },
+      "id": "5f35b47b-eba6-4703-bcdc-03d5cf3529df",
+      "name": "Output Parser - شكل عام",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'الفكرة: ' + $('تجهيز المدخلات').item.json.idea + ' --- التقييم الأولي: ' + JSON.stringify($('وكيل التقييم الأولي').item.json.output) + ' --- المنافسين والفجوة: ' + JSON.stringify($('وكيل البحث والمنافسين').item.json.output) + ' --- الفيتشرز: ' + JSON.stringify($('وكيل الفيتشرز').item.json.output) + ' --- الشكل العام: ' + JSON.stringify($('وكيل الشكل العام').item.json.output) }}",
+        "options": {
+          "systemMessage": "أنت تكتب تقرير تحليل فكرة مشروع بصيغة HTML بسيط جاهز للإرسال بإيميل، بالعربي. رتب التقرير بعناوين واضحة h2 بهاد الترتيب بالضبط: الفكرة، التقييم الأولي مع السبب، تحليل المنافسين والفجوة بالسوق، الفيتشرز المقترحة للنسخة الأولى مرتبة حسب الأهمية، الشكل العام المقترح (الصفحات وتدفق المستخدم). استخدم فقط وسوم HTML بسيطة h2 و p و ul و li و strong بدون CSS أو head أو body أو أي Markdown. رد بالـ HTML فقط بدون أي نص إضافي قبله أو بعده. ما عندك tools.\nمهم جدًا: ما تكتب ولا كلمة تفكير أو تخطيط أو تحليل أو شرح قبل الـ HTML. أول حرف بردك لازم يكون < مباشرة، وآخر شي لازم يكون وسم إغلاق HTML. أي نص خارج الوسوم المسموحة ممنوع منعًا تامًا."
+        }
+      },
+      "id": "9e94775e-ce0b-49fc-ad84-0778e9741331",
+      "name": "وكيل التقرير النهائي",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        96,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.6-27b",
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "id": "23170628-ca7e-4389-927f-ba6ad6703331",
+      "name": "Groq Model - تقرير",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        96,
+        544
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "bA6IoEAvZnP5YJ75",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('تجهيز المدخلات').item.json.email }}",
+        "subject": "تقرير تحليل فكرة مشروعك 📊",
+        "message": "=   {{ $json.report_html }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "\"yahya\""
+        }
+      },
+      "id": "fbaa39f6-804e-457d-a0d7-195418439894",
+      "name": "إرسال التقرير عالإيميل",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        432
+      ],
+      "webhookId": "d58a7bdc-8c3f-4125-a873-c0869bc2abdd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "p9sox6uJJzJWHCDx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "تم الإرسال ✅",
+        "completionMessage": "شكرًا! التقرير التحليلي الكامل بالطريق عالإيميل يلي دخّلته. تحقق من صندوق الوارد (أو Spam) خلال دقيقة أو دقيقتين.",
+        "options": {}
+      },
+      "id": "fde52a7f-231f-4c94-b6ec-91533258d09d",
+      "name": "صفحة الشكر",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        704,
+        320
+      ],
+      "webhookId": "7321387c-d192-4575-822e-a89806a585fb"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json.output;\nconst match = raw.match(/<h2[\\s\\S]*$/i);\nconst clean = match ? match[0].trim() : raw;\nreturn [{ json: { email: $('تجهيز المدخلات').item.json.email, report_html: clean } }];"
+      },
+      "id": "7af50af4-47de-40b5-bef6-e891cfd396fa",
+      "name": "تنظيف التقرير",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        592
+      ]
+    }
+  ],
+  "connections": {
+    "استلام الفكرة": {
+      "main": [
+        [
+          {
+            "node": "تجهيز المدخلات",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تجهيز المدخلات": {
+      "main": [
+        [
+          {
+            "node": "وكيل التقييم الأولي",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "وكيل التقييم الأولي": {
+      "main": [
+        [
+          {
+            "node": "وكيل البحث والمنافسين",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Model - تقييم": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "وكيل التقييم الأولي",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Parser - تقييم": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "وكيل التقييم الأولي",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "وكيل البحث والمنافسين": {
+      "main": [
+        [
+          {
+            "node": "وكيل الفيتشرز",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Model - بحث": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "وكيل البحث والمنافسين",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "أداة بحث Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "وكيل البحث والمنافسين",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Parser - منافسين": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "وكيل البحث والمنافسين",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "وكيل الفيتشرز": {
+      "main": [
+        [
+          {
+            "node": "وكيل الشكل العام",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Model - فيتشرز": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "وكيل الفيتشرز",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Parser - فيتشرز": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "وكيل الفيتشرز",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "وكيل الشكل العام": {
+      "main": [
+        [
+          {
+            "node": "وكيل التقرير النهائي",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Model - شكل عام": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "وكيل الشكل العام",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Parser - شكل عام": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "وكيل الشكل العام",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "وكيل التقرير النهائي": {
+      "main": [
+        [
+          {
+            "node": "تنظيف التقرير",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Model - تقرير": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "وكيل التقرير النهائي",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "إرسال التقرير عالإيميل": {
+      "main": [
+        [
+          {
+            "node": "صفحة الشكر",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تنظيف التقرير": {
+      "main": [
+        [
+          {
+            "node": "إرسال التقرير عالإيميل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0d41135dd2fe29834dbd452454a88c10355c19d9559410558cada86305941962"
+  }
+}
