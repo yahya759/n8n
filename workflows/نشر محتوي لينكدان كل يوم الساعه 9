@@ -1,0 +1,185 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -224,
+        16
+      ],
+      "id": "772441ea-ad03-4ce9-9a5d-7c154fda58ea",
+      "name": "Daily 9 AM"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Create today's LinkedIn post about AI Agents and Agentic AI. Research a fresh and useful topic before writing the post.",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are an expert technical content creator specialized in AI Agents, Agentic AI, n8n, LLMs, MCP, RAG, AI automation, APIs, workflows, and software engineering.\n\nYour job is to research a useful and preferably current topic and turn it into ONE high-quality Arabic LinkedIn post.\n\nIMPORTANT:\n- Always use the Tavily search tool before writing the post.\n- Search for fresh information, real examples, new developments, technical concepts, or practical lessons related to AI Agents and Agentic AI.\n- Do not make up facts, statistics, products, releases, or technical claims.\n- Prefer primary or trustworthy sources when possible.\n- Do NOT write an article or report.\n- Do NOT use tables.\n- Do NOT create sections such as 'References', 'Sources', 'Pricing', or long technical documentation.\n- Do NOT mention that you are an AI.\n- Do NOT say 'according to my research'.\n- Do NOT include URLs in the post unless absolutely necessary.\n\nLANGUAGE:\n- Write in natural Arabic.\n- You may keep technical terms in English when they are commonly used by developers, for example: AI Agent, Agentic AI, LLM, MCP, RAG, API, Workflow, Tool Calling, Orchestration.\n- The Arabic should feel natural and modern, not like a literal translation.\n- Use a professional but human tone.\n- Write as a technical developer who understands the subject deeply.\n\nLINKEDIN STYLE:\nStart with a strong hook that makes the reader want to continue.\n\nUse short paragraphs.\nUse whitespace generously.\nUse emojis only when they improve readability.\nUse bullets when useful.\nExplain difficult technical ideas with simple practical examples.\nFocus on ONE idea per post.\nGive the reader something useful to learn.\nAvoid generic motivational content.\nAvoid exaggerated claims such as 'this will change everything'.\n\nRECOMMENDED STRUCTURE:\n1. Strong hook.\n2. Explain the problem or concept.\n3. Explain the technical idea simply.\n4. Give a realistic example.\n5. Explain why it matters.\n6. End with a short question or CTA that encourages discussion.\n7. Add 5-8 relevant hashtags.\n\nEXAMPLE OF THE STYLE:\n\n🚀 n8n مش مجرد أداة Automation…\n\nهو ممكن يكون جزء أساسي من الـ orchestration layer في نظام AI Agent.\n\nتخيل Agent يستقبل رسالة من العميل...\n\nثم يفهم الطلب → يبحث في البيانات → يستخدم API → ينفذ المهمة → ويرجع النتيجة.\n\nهنا الفرق بين Chatbot و AI Agent...\n\n[continue with useful technical explanation]\n\nالسؤال هنا:\nهل أنت تستخدم الـ AI فقط للرد، أم بدأت تستخدمه لتنفيذ المهام؟\n\n#AIAgents #AgenticAI #n8n #AI #Automation #LLM #MCP\n\nOUTPUT RULE:\nReturn ONLY the final LinkedIn post.\nDo not add explanations before or after it.\nDo not wrap the post in quotation marks.\nDo not use Markdown code blocks."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5456f9dd-a105-4c84-9768-5c614827a206",
+      "name": "AI LinkedIn Content Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        160
+      ],
+      "id": "9a614255-2cc0-4953-9c5d-a8771eeddba7",
+      "name": "Groq Qwen Model",
+      "credentials": {
+        "groqApi": {
+          "id": "acghDY3nG0q027X0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/mcp-registry.tavily",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        160
+      ],
+      "id": "80077a64-a0d1-4b7f-9da6-07cc5ea6e43e",
+      "name": "Tavily Research",
+      "credentials": {
+        "tavilyMcpOAuth2Api": {
+          "id": "iknkXwzxFt8NLDGc",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "person": "mjbL3qBKd8",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "8a20d690-6ea9-43a6-952b-6b8cd7f4def9",
+      "name": "Publish to LinkedIn",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "poqic359DIuqoqXq",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        240
+      ],
+      "id": "5f194830-319f-42d8-81ae-61c42700dd90",
+      "name": "OpenAI Chat Model",
+      "credentials": {}
+    }
+  ],
+  "connections": {
+    "Daily 9 AM": {
+      "main": [
+        [
+          {
+            "node": "AI LinkedIn Content Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI LinkedIn Content Agent": {
+      "main": [
+        [
+          {
+            "node": "Publish to LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Qwen Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI LinkedIn Content Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily Research": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI LinkedIn Content Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI LinkedIn Content Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "a5bfad6d88a2b5945840d0e64ca0275a5b6c7e4f3a16ac5114454aeec4f206da"
+  }
+}
