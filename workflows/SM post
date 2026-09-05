@@ -1,0 +1,606 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        848,
+        256
+      ],
+      "id": "9c841dc1-b1d6-4fcd-b65d-3ab94bdd16dc",
+      "name": "Telegram Trigger",
+      "webhookId": "8944d538-3c9a-4128-9443-464b880e5b8d",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are a Content Distribution Agent. You receive a topic/message from the user via Telegram, research it using the Tavily MCP tool, then generate and publish a tailored post to three platforms in parallel: X (Twitter), Facebook, and LinkedIn.\n\n## Workflow\n1. Read the user's message carefully — extract the core topic/subject.\n2. Use Tavily MCP to research the topic (latest facts, stats, angles worth mentioning). Do this once, then reuse the research for all three platform posts.\n3. Call all three tools in the SAME turn: \"AI Agent Tool2\" (X), \"AI Agent Tool1\" (Facebook), \"AI Agent Tool\" (LinkedIn). Pass each one:\n   - The original topic\n   - A condensed summary of your research findings (2-4 key points, facts, or sources)\n   - Do NOT write the final post yourself — each sub-agent is responsible for adapting tone/format to its own platform.\n4. After all three tools return their results, send ONE confirmation message back to the user via Telegram (\"Send a text message\" / \"Reply to Customer\") summarizing what was published on each platform (short status line per platform, not the full post text).\n\n## Rules\n- Never publish without first researching via Tavily — a post based only on prior knowledge is not acceptable.\n- Never write platform-specific copy yourself. Your job is topic + research → delegate. Each sub-agent owns its own voice/format.\n- If Tavily returns nothing useful, proceed with general knowledge but note this to the user in your final reply.\n- If any of the three tools fails, report which platform failed and why — don't silently drop it.\n- Keep your reply to the user in Telegram short: 1 line per platform max. No repeating the full post content back to the user unless asked.\n- Respond in the same language the user wrote in (Arabic or English)."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1072,
+        272
+      ],
+      "id": "9feab6e6-800a-4082-8fc8-b41d53df9921",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        928,
+        448
+      ],
+      "id": "5fbb40bc-5db1-481a-a9b9-bb26e7ed2721",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "acghDY3nG0q027X0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "MiniMax-M2.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMinimax",
+      "typeVersion": 1.1,
+      "position": [
+        1056,
+        448
+      ],
+      "id": "ea6c0cd9-4e82-4416-8da0-13790f134380",
+      "name": "MiniMax Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        1168,
+        448
+      ],
+      "id": "32ac0713-0fe3-428a-a434-a9ae8e0b82dc",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.6-27b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        832
+      ],
+      "id": "309719d8-12ef-4afd-9065-b37f04578d42",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "acghDY3nG0q027X0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMoonshot",
+      "typeVersion": 1.1,
+      "position": [
+        1840,
+        864
+      ],
+      "id": "00f2953f-62af-41ee-a071-564566c0a6c5",
+      "name": "Moonshot Kimi Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "person": "mjbL3qBKd8",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Text', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedInTool",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        864
+      ],
+      "id": "98168d3f-0a90-47d6-a2ed-aa9528738e1d",
+      "name": "Create a post in LinkedIn",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "poqic359DIuqoqXq",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/mcp-registry.tavily",
+      "typeVersion": 1.1,
+      "position": [
+        1328,
+        464
+      ],
+      "id": "ef21ecfa-6e31-4461-8627-a572226f2e67",
+      "name": "Tavily MCP",
+      "credentials": {
+        "tavilyMcpOAuth2Api": {
+          "id": "iknkXwzxFt8NLDGc",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "linkedin post",
+        "height": 432,
+        "width": 512,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1680,
+        624
+      ],
+      "typeVersion": 1,
+      "id": "eb45ebf4-f56d-432d-8cae-4e1290ff6a02",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        800
+      ],
+      "id": "00fe3d2b-7e63-42f1-b2cb-43520c5285b4",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "acghDY3nG0q027X0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1376,
+        864
+      ],
+      "id": "2fdb665d-d8bb-448c-83a2-e9a68732e086",
+      "name": "Google Gemini Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v25.0",
+        "node": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Node', ``, 'string') }}",
+        "edge": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Edge', ``, 'string') }}",
+        "allowUnauthorizedCerts": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Ignore_SSL_Issues__Insecure_', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.facebookGraphApiTool",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        848
+      ],
+      "id": "a66d1966-c9bb-430f-b385-9d99ddfe8e5d",
+      "name": "Facebook Graph API"
+    },
+    {
+      "parameters": {
+        "content": "facebook\n",
+        "height": 464,
+        "width": 448,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        608
+      ],
+      "typeVersion": 1,
+      "id": "89edeb5e-17cf-4a71-9870-256ee0832371",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.6-27b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        768,
+        816
+      ],
+      "id": "cb63596a-eb32-4f09-93fc-afc1c338a8b6",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "acghDY3nG0q027X0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.6,
+      "position": [
+        880,
+        880
+      ],
+      "id": "98d0b636-267b-45b1-922b-060ae2d2e80a",
+      "name": "Anthropic Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.twitterTool",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        864
+      ],
+      "id": "5822e0d0-40ac-499f-be71-b1439e475e61",
+      "name": "Create Tweet in X"
+    },
+    {
+      "parameters": {
+        "content": "x ",
+        "height": 480,
+        "width": 432,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        752,
+        608
+      ],
+      "typeVersion": 1,
+      "id": "1ee91819-bb59-4fa8-ac13-1054ea9b238f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "c5b3783c-3002-46a3-986b-ab7a94536a43",
+      "name": "Reply to Customer",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1648,
+        176
+      ],
+      "webhookId": "d85aa5bb-13b6-4efb-8cc6-e03aa4ac9629",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to generate and publish a post to X (Twitter). Call it once per user request, passing the topic and a condensed research summary (2-4 key facts/points). This tool writes a platform-specific tweet (max 280 characters, punchy tone, 1-2 hashtags) and publishes it directly via the Create Tweet in X action. Returns confirmation once the tweet is posted.",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are the X (Twitter) content specialist. You receive a topic and research summary from the main agent. Write ONE tweet (max 280 characters) that:\n- Leads with the strongest hook/fact from the research\n- Uses a punchy, direct tone — no corporate fluff\n- Includes 1-2 relevant hashtags max\n- No emojis unless they add real value\nOutput ONLY the final tweet text, ready to publish via the \"Create Tweet in X\" tool. Do not add explanations or preamble."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        784,
+        672
+      ],
+      "id": "dd8a056a-1e7e-426b-9176-da4a403a1f53",
+      "name": "x"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to generate and publish a post to Facebook. Call it once per user request, passing the topic and a condensed research summary (2-4 key facts/points). This tool writes a platform-specific post (conversational tone, 3-6 sentences, soft call-to-action) and publishes it directly via the Facebook Graph API. Returns confirmation once the post is published.",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are the Facebook content specialist. You receive a topic and research summary from the main agent. Write a Facebook post that:\n- Opens with a conversational hook (question or relatable statement)\n- Is 3-6 sentences, easy to skim, uses line breaks between ideas\n- Explains the \"why it matters\" for a general audience\n- Ends with a soft call-to-action (question to spark comments, or invite to share opinion)\n- No hashtags, or max 1-2 at the very end\nOutput ONLY the final post text, ready to publish via the Facebook Graph API tool. Do not add explanations or preamble."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        656
+      ],
+      "id": "878748dc-25bd-45f3-8a3b-de994c618914",
+      "name": "facebook"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to generate and publish a post to LinkedIn. Call it once per user request, passing the topic and a condensed research summary (2-4 key facts/points). This tool writes a platform-specific post (professional hook, short paragraphs, 3-5 hashtags) and publishes it directly via the Create a post in LinkedIn action. Returns confirmation once the post is published.",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are the LinkedIn content specialist. You receive a topic and research summary from the main agent. Write a LinkedIn post that:\n- Opens with a strong professional hook (insight, stat, or contrarian take) — first line must stand alone since LinkedIn truncates it\n- Uses short paragraphs (1-2 lines each) with whitespace between them for readability\n- Frames the topic with business/industry relevance or a lesson learned\n- Ends with a thought-provoking question or clear takeaway\n- 3-5 relevant hashtags at the end\nOutput ONLY the final post text, ready to publish via the \"Create a post in LinkedIn\" tool. Do not add explanations or preamble."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        1808,
+        672
+      ],
+      "id": "25b09baa-7202-48ce-93db-6e91accd8f96",
+      "name": "linkedin"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Reply to Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MiniMax Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "linkedin",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Moonshot Kimi Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "linkedin",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Create a post in LinkedIn": {
+      "ai_tool": [
+        [
+          {
+            "node": "linkedin",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "facebook",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "facebook",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Facebook Graph API": {
+      "ai_tool": [
+        [
+          {
+            "node": "facebook",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "x",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "x",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Create Tweet in X": {
+      "ai_tool": [
+        [
+          {
+            "node": "x",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "x": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "facebook": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "linkedin": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "instanceId": "a5bfad6d88a2b5945840d0e64ca0275a5b6c7e4f3a16ac5114454aeec4f206da"
+  }
+}
