@@ -1,0 +1,282 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "dd16530a-bc67-4880-b8c4-6b0989c15d19",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "d77dcd71-042f-4b6d-98a5-554bd76dc4e6",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "niche-field",
+              "name": "niche",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2b586452-468c-4655-b13b-c65b1585b51f",
+      "name": "Extract Niche",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.bing.com/news/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.niche }}"
+            },
+            {
+              "name": "format",
+              "value": "RSS"
+            },
+            {
+              "name": "mkt",
+              "value": "ar-EG"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "99dcdfbb-0239-4a48-b764-2d5f579586de",
+      "name": "Search Bing News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        688,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $('Extract Niche').item.json.niche }}"
+            },
+            {
+              "name": "hl",
+              "value": "ar"
+            },
+            {
+              "name": "gl",
+              "value": "EG"
+            },
+            {
+              "name": "ceid",
+              "value": "EG:ar"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "bb6ada22-40d1-465e-9aca-abb6bd4625c7",
+      "name": "Search Google News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        688,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=مجال المحتوى: {{ $(\"Extract Niche\").item.json.niche }}\n\nنتائج Google News (RSS خام):\n{{ $(\"Search Google News\").item.json.data }}\n\nنتائج Bing News (RSS خام):\n{{ $(\"Search Bing News\").item.json.data }}",
+        "options": {
+          "systemMessage": "أنت استراتيجي محتوى سوشيال ميديا متخصص بتحليل الترندات لصناع محتوى يتحدثون العربية. من البيانات الخام المرفقة (أخبار Google News و Bing News)، استخرج 5 أفكار محتوى حقيقية ومرتبطة بالمجال المحدد. لكل فكرة اكتب: 1) عنوان/hook جذاب بالعربي، 2) الزاوية أو الفكرة الأساسية بجملتين، 3) نوع المحتوى المقترح (Reel / كاروسيل / ستوري)، 4) سبب مختصر ليش هاد الترند مهم الآن. صيغ ردك بتنسيق HTML بسيط (استخدم <b> للعناوين) مناسب لإرساله كرسالة تيليجرام، وابدأ بعنوان عام للقائمة."
+        }
+      },
+      "id": "d068958e-704a-4203-bbe4-230202f12568",
+      "name": "Generate Content Ideas",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        912,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        },
+        "options": {}
+      },
+      "id": "1764e4a8-b4d7-458f-a077-d17344b46946",
+      "name": "Claude Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.6,
+      "position": [
+        912,
+        560
+      ],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "0754e003-b377-496a-b4f3-a593b1c9fb8c",
+      "name": "Send Ideas to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        304
+      ],
+      "webhookId": "681d7b89-deb7-497e-a026-41f57465425c",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## فلو أفكار محتوى من الترندات\nابعت اسم المجال على تيليجرام، والفلو بيدور على Reddit و Google News، ويرجعلك 5 أفكار محتوى جاهزة.",
+        "color": 4
+      },
+      "id": "8b0eb258-b9bb-47a5-a9aa-83debe06673d",
+      "name": "Sticky Note 990e3929",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        256,
+        64
+      ]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Niche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Niche": {
+      "main": [
+        [
+          {
+            "node": "Search Bing News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Bing News": {
+      "main": [
+        [
+          {
+            "node": "Search Google News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Google News": {
+      "main": [
+        [
+          {
+            "node": "Generate Content Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Content Ideas": {
+      "main": [
+        [
+          {
+            "node": "Send Ideas to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Content Ideas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "instanceId": "a5bfad6d88a2b5945840d0e64ca0275a5b6c7e4f3a16ac5114454aeec4f206da"
+  }
+}
