@@ -1,0 +1,915 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "85dfaa97-02c1-4c05-8a7b-15b6e2e888bb",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -384,
+        112
+      ],
+      "webhookId": "f91d711f-cf59-4bf1-8dad-29c997e14892",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "voice-exists",
+              "leftValue": "={{ $json.message.voice }}",
+              "operator": {
+                "operation": "exists",
+                "type": "object",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "b119d126-8630-4bbc-ba2e-17d96dd61857",
+      "name": "Has Voice?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "id": "1d8d1f40-1ae2-4564-9d2d-be0ac4fd9450",
+      "name": "Get Voice File",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        16,
+        -48
+      ],
+      "webhookId": "6b6187bc-a546-4ae5-9a14-e1b9a8e66e15",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "id": "2e989107-79f4-4984-a104-fd71df511d65",
+      "name": "Transcribe Voice",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        -48
+      ],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "niche-field-voice",
+              "name": "niche",
+              "type": "string",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "id": "chat-id-field-voice",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            },
+            {
+              "id": "user-name-field-voice",
+              "name": "user_name",
+              "type": "string",
+              "value": "={{ $('Telegram Trigger').item.json.message.from.first_name || \"صديقي\" }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cb8e8d67-a1ca-4fe6-9948-4294a7117848",
+      "name": "Extract Topic (Voice)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "niche-field",
+              "name": "niche",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "chat-id-field",
+              "name": "chat_id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "user-name-field",
+              "name": "user_name",
+              "value": "={{ $json.message.from.first_name || \"صديقي\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8d23d9a3-d2c0-485e-978d-9b4026bc3ae0",
+      "name": "Extract Topic",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        160
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "66bb6b6a-3d0a-4adf-9dd5-ae71110c37a7",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Extract Topic\").item.json.chat_id }}",
+        "text": "=⚠️ *Workflow Error Alert*\n\n• *Workflow:* {{ $json.workflow.name }}\n• *Failed Node:* {{ $json.execution.lastNodeExecuted || \"Unknown\" }}\n• *Error:* {{ $json.execution.error.message || \"No error message provided\" }}\n• *Execution ID:* {{ $json.execution.id }}\n• *View Execution:* {{ $json.execution.url }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "3db807c5-2199-43fb-ac59-5af712232ace",
+      "name": "Send Error Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        432
+      ],
+      "webhookId": "d63939b4-ef29-4e52-9457-c3ae2c2c9a07",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🎯 1. Trigger & Live Trend Research\n• Receives topic via Telegram\n• Fetches latest news from Google News & Bing News RSS",
+        "height": 304,
+        "width": 352,
+        "color": 4
+      },
+      "id": "6ca4ebe7-f3bf-4d53-afea-cca3544bc87c",
+      "name": "Sticky Note f50a12cb",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 3. Multi-Platform Publishing\n• Posts text + generated image to LinkedIn\n• Posts text + generated image to Facebook\n• Sends completion summary to Telegram",
+        "height": 512,
+        "width": 368,
+        "color": 6
+      },
+      "id": "5720e67b-bd69-41d3-a104-10e38139895e",
+      "name": "Sticky Note 669a3760",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ 4. Error Handling & Monitoring\n• Catches uncaught workflow failures\n• Alerts creator immediately via Telegram",
+        "height": 272,
+        "width": 512
+      },
+      "id": "75bca7f4-7841-4d41-9739-789e477b2903",
+      "name": "Sticky Note 884c996c",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "content": "create image ",
+        "height": 256,
+        "width": 208,
+        "color": 2
+      },
+      "id": "33d17ca4-498c-4d32-a09d-c079792d34e1",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "content": "serch in internet\n",
+        "height": 256,
+        "width": 432,
+        "color": 3
+      },
+      "id": "3100e71e-97e5-4727-87bb-d670d77a31f1",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        432,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "content": "anlize the voice to text ",
+        "height": 240,
+        "width": 640
+      },
+      "id": "950e2149-ca5a-43fc-a68e-b774c4b0e807",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "content": "prain",
+        "width": 336,
+        "color": 5
+      },
+      "id": "329ecd62-5638-4d2a-9257-37e6299bbdb7",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        224
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "25d15208-8ca6-4555-a04c-bb3b830f8a02",
+      "name": "Merge Voice Text",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        704,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "person": "mjbL3qBKd8",
+        "text": "={{ $(\"Parse Content\").item.json.linkedin_post }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {
+          "visibility": "PUBLIC"
+        }
+      },
+      "id": "e04268cd-5ce4-4221-a6bd-9f557b2f7635",
+      "name": "Publish to LinkedIn",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        2080,
+        -32
+      ],
+      "retryOnFail": true,
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "poqic359DIuqoqXq",
+          "name": "LinkedIn account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "42a5d3b5-b9a1-48b0-9778-adbfe889b7c7",
+      "name": "Wait For Social Posts",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2304,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v21.0",
+        "node": "me",
+        "edge": "photos",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "caption",
+                "value": "={{ $(\"Parse Content\").item.json.facebook_post }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "dd6a22f3-b4de-4495-80af-c18495e45c03",
+      "name": "Publish to Facebook",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        2080,
+        160
+      ],
+      "retryOnFail": true,
+      "disabled": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=🔍 *تم استلام الموضوع:* {{ $json.niche }}\n\n⏳ جاري استخراج الترندات من Google News و Bing News وتوليد المحتوى وصورة الذكاء الاصطناعي...",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "a6ddec4c-8064-42da-a36a-c017afc88a81",
+      "name": "Notify In Progress",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        928,
+        -96
+      ],
+      "webhookId": "6562dfe3-b8cd-4a31-a7db-b9eb52d176e5",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.bing.com/news/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $(\"Extract Topic\").item.json.niche }}"
+            },
+            {
+              "name": "format",
+              "value": "RSS"
+            },
+            {
+              "name": "mkt",
+              "value": "ar-EG"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "e70fe705-7c6c-414a-94e2-f0d0775e233c",
+      "name": "Search Bing News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        496,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $(\"Extract Topic\").item.json.niche }}"
+            },
+            {
+              "name": "hl",
+              "value": "ar"
+            },
+            {
+              "name": "gl",
+              "value": "EG"
+            },
+            {
+              "name": "ceid",
+              "value": "EG:ar"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "a4e4c834-4a2c-4c16-898f-61715ea2badf",
+      "name": "Search Google News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=مجال المحتوى المطلوب: {{ $(\"Extract Topic\").item.json.niche }}\n\nنتائج أخبار Google News:\n{{ $(\"Search Google News\").item.json.data }}\n\nنتائج أخبار Bing News:\n{{ $(\"Search Bing News\").item.json.data }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "أنت خبير استراتيجي لصناعة المحتوى الرقمي وفنان إخراج بصري متخصص في السوشيال ميديا (LinkedIn و Facebook).\nمهمتك:\n1. تحليل نتائج أخبار الترندات المرفقة للمجال المطلوب (واستخدام أداة البحث Tavily إذا احتجت معلومات إضافية حديثة).\n2. اختيار الزاوية أو الخبر الأكثر إثارة وأهمية للجمهور.\n3. كتابة منشورين متكاملين بالعربية:\n   - منشور LinkedIn: خطاف قوي، فقرات قصيرة، قيمة وفائدة حقيقية، سؤال تفاعلي للنقاش (CTA)، و3-5 هاشتاجات مهنية.\n   - منشور Facebook: أسلوب محادثة وقصة جذابة، بسيط وممتع، سؤال مشجع على التعليق، و1-2 هاشتاج.\n4. صياغة برومبت باللغة الإنجليزية مخصص لتوليد صورة عبر DALL-E بدون أي نصوص أو كتابة.\n\nقواعد صارمة لتنسيق JSON (مهم جداً):\n- أعد النتيجة ككائن JSON صالح فقط، بدون أي code fence مثل ```json وبدون أي نص خارج كائن الـ JSON.\n- ممنوع استخدام علامة الاقتباس المزدوجة \" في أي مكان داخل نصوص الحقول (headline, linkedin_post, facebook_post, image_prompt) — إذا احتجت اقتباس أو تنصيص كلمة، استخدم علامة اقتباس مفردة ' بدلاً منها.\n- الأسطر الجديدة داخل النصوص يجب أن تكون بصيغة \\n فقط (escaped)، وليست سطر جديد فعلي.\n\nالمخرجات المطلوبة: يجب أن تعيد النتيجة بتنسيق JSON صالح وصارم فقط:\n{\n  \"headline\": \"عنوان الترند\",\n  \"linkedin_post\": \"نص منشور لينكد إن كاملاً\",\n  \"facebook_post\": \"نص منشور فيسبوك كاملاً\",\n  \"image_prompt\": \"Detailed English prompt for DALL-E image generation without any text inside image\"\n}"
+        }
+      },
+      "id": "8bf24784-5884-4536-a52f-0a24582d34d9",
+      "name": "AI Content Strategist",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1312,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "3cc224d8-d77b-4411-bcc5-66a53a0db225",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        256
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "acghDY3nG0q027X0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function extractJson(rawText) {\n  // شيل أي code fence markdown (```json ... ```)\n  let cleaned = rawText.replace(/```json/gi, \"\").replace(/```/g, \"\").trim();\n\n  // اعزل كائن الـ JSON من أول { لآخر }\n  const match = cleaned.match(/\\{[\\s\\S]*\\}/);\n  let jsonStr = match ? match[0] : cleaned;\n\n  // محاولة أولى: بارسينغ مباشر\n  try {\n    return JSON.parse(jsonStr);\n  } catch (e) {\n    // إصلاح ذكي: الموديل أحياناً بيحط علامات اقتباس \" جوا النصوص بدون escape وهاي بتكسر الـ JSON.\n    // نصلحها: لكل حقل \"key\": \"value\" نستبدل أي اقتباس مزدوج داخل value باقتباس مفرد\n    // (الاقتباس الصحيح للحقل هو اللي بيجي مباشرة قبل فاصلة/قوس)\n    const repaired = jsonStr.replace(/(\"[a-zA-Z_]+\")(\\s*:\\s*\")([\\s\\S]*?)(\"(?=\\s*[,}]))/g, (m, key, sep, val, close) => {\n      const safeVal = val.replace(/\"/g, \"'\");\n      return key + sep + safeVal + close;\n    });\n    return JSON.parse(repaired);\n  }\n}\n\nconst raw = $json.output || $json.text || \"\";\nlet parsed = {};\ntry {\n  parsed = extractJson(raw);\n} catch (e) {\n  const topic = $(\"Extract Topic\").item.json.niche;\n  parsed = {\n    headline: topic,\n    linkedin_post: raw,\n    facebook_post: raw,\n    image_prompt: \"High-tech modern professional visual concept about \" + topic + \", cinematic lighting, 8k, photorealistic, no text\"\n  };\n}\n\nconst topic = $(\"Extract Topic\").item.json.niche;\nreturn [{\n  json: {\n    headline: parsed.headline || topic,\n    linkedin_post: parsed.linkedin_post || raw,\n    facebook_post: parsed.facebook_post || raw,\n    image_prompt: parsed.image_prompt || (\"Professional modern visual representing \" + topic + \", 8k, cinematic lighting, no text\"),\n    chat_id: $(\"Extract Topic\").item.json.chat_id\n  }\n}];"
+      },
+      "id": "1da53b90-c175-4ab3-b80b-52d74548021b",
+      "name": "Parse Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-image-1-mini"
+        },
+        "prompt": "={{ $json.image_prompt }}",
+        "options": {
+          "size": "1024x1024"
+        }
+      },
+      "id": "877be1d4-2216-4715-954f-b6ff0b9a7e95",
+      "name": "Generate AI Image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1856,
+        64
+      ],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Extract Topic\").item.json.chat_id }}",
+        "text": "=🎉 <b>تم توليد المحتوى والصورة ونشرهما بنجاح!</b>\n\n📌 <b>عنوان الترند:</b>\n{{ $(\"Parse Content\").item.json.headline }}\n\n✅ <b>حالة النشر:</b>\n• LinkedIn: تم النشر بنجاح مع الصورة 🚀\n• Facebook: تم إرسال المنشور والصورة 🚀\n\n👇 المنشورين الكاملين جايين برسالتين لحال.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "a731e2a4-2ea2-4adb-9e63-b66ac4767462",
+      "name": "Send Final Report",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2528,
+        64
+      ],
+      "executeOnce": true,
+      "webhookId": "6ad0eabf-4dd1-4bfb-8343-c21e794f17c2",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.6,
+      "position": [
+        1360,
+        224
+      ],
+      "id": "063fabba-540d-4aff-ba49-a7c89e31b2c9",
+      "name": "Anthropic Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Extract Topic\").item.json.chat_id }}",
+        "text": "=💼 <b>منشور LinkedIn:</b>\n\n{{ $(\"Parse Content\").item.json.linkedin_post }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "7fb7219e-74e3-457a-a3e3-8deb34876f34",
+      "name": "Send LinkedIn Post Text",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2816,
+        32
+      ],
+      "webhookId": "a49b859b-04ab-4f49-a4d9-dea867136279",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Extract Topic\").item.json.chat_id }}",
+        "text": "=📱 <b>منشور Facebook:</b>\n\n{{ $(\"Parse Content\").item.json.facebook_post }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "39658c5d-3de4-473c-999f-524864893120",
+      "name": "Send Facebook Post Text",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3008,
+        144
+      ],
+      "webhookId": "fc455d0d-f492-4800-b081-307dcde5714a",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Has Voice?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Voice?": {
+      "main": [
+        [
+          {
+            "node": "Get Voice File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Voice File": {
+      "main": [
+        [
+          {
+            "node": "Transcribe Voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe Voice": {
+      "main": [
+        [
+          {
+            "node": "Extract Topic (Voice)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Topic (Voice)": {
+      "main": [
+        [
+          {
+            "node": "Merge Voice Text",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Extract Topic": {
+      "main": [
+        [
+          {
+            "node": "Merge Voice Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Voice Text": {
+      "main": [
+        [
+          {
+            "node": "Notify In Progress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish to LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Wait For Social Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait For Social Posts": {
+      "main": [
+        [
+          {
+            "node": "Send Final Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Wait For Social Posts",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Notify In Progress": {
+      "main": [
+        [
+          {
+            "node": "Search Bing News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Bing News": {
+      "main": [
+        [
+          {
+            "node": "Search Google News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Google News": {
+      "main": [
+        [
+          {
+            "node": "AI Content Strategist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Content Strategist": {
+      "main": [
+        [
+          {
+            "node": "Parse Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Content Strategist",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Content": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Image": {
+      "main": [
+        [
+          {
+            "node": "Publish to LinkedIn",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Publish to Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Final Report": {
+      "main": [
+        [
+          {
+            "node": "Send LinkedIn Post Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Content Strategist",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Send LinkedIn Post Text": {
+      "main": [
+        [
+          {
+            "node": "Send Facebook Post Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5bfad6d88a2b5945840d0e64ca0275a5b6c7e4f3a16ac5114454aeec4f206da"
+  }
+}
