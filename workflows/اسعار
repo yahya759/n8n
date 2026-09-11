@@ -1,0 +1,363 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "e1bf8736-8b35-455d-8901-a24183035bcc",
+      "name": "استقبال اسم المنتج",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "f3f56689-0b12-45c4-b4df-ea3216b52157",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "أنت وكيل بحث أسعار. استخدم أداة البحث للعثور على سعر المنتج المطلوب في عدة مواقع بيع مختلفة (مثل أمازون السعودية، نون، جرير، اكسترا، إلخ). أرجع قائمة خام تتضمن: اسم الموقع، السعر بالريال السعودي، والرابط إن وجد. لا تلخص أو تقارن، فقط اجمع البيانات الخام."
+        }
+      },
+      "id": "7ca1fcfc-5eb8-422c-b928-33aa837b142a",
+      "name": "وكيل البحث",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "cf722278-9531-4e9a-9731-3666f02240c6",
+      "name": "نموذج وكيل البحث",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        336
+      ],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "أنت وكيل مقارنة أسعار. لديك نتائج بحث خام عن سعر منتج من عدة مواقع. رتبها من الأرخص للأغلى، واحسب متوسط السعر، وحدد الفرق بين أرخص وأغلى سعر. أخرج النتيجة كبيانات منظمة (الموقع، السعر، الترتيب)."
+        }
+      },
+      "id": "bde8b2ee-0dea-4dda-a005-ee698d7fc441",
+      "name": "وكيل المقارنة",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        576,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "3a2f3ad7-7cb9-4e78-bf83-d760e8252cb1",
+      "name": "نموذج وكيل المقارنة",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        336
+      ],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "أنت وكيل تقارير. حوّل بيانات المقارنة المرتبة إلى رسالة واحدة منظمة وواضحة، تتضمن: أرخص سعر ووين موجود، أغلى سعر ووين موجود، ومتوسط السعر بالسوق. استخدم تنسيق قصير ومباشر يناسب رسالة تيليجرام."
+        }
+      },
+      "id": "9fe57dd1-861b-4082-abe2-38735e50739c",
+      "name": "وكيل التقرير",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        928,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "597f791a-7c39-4dc8-b0c3-ad7431482959",
+      "name": "نموذج وكيل التقرير",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1008,
+        336
+      ],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('استقبال اسم المنتج').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "06ba6276-42c0-4ec0-9c1f-257297de801d",
+      "name": "إرسال التقرير",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        112
+      ],
+      "webhookId": "9306835e-6c30-4894-a84b-690b804f93d5",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ir0UusqFzepelcoZ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"query\": $fromAI('query', 'كلمات البحث عن سعر المنتج'), \"search_depth\": \"basic\", \"max_results\": 6, \"include_answer\": false } }}",
+        "options": {}
+      },
+      "id": "8e85523b-6b85-4d91-951e-bab2fef61818",
+      "name": "أداة بحث تافيلي",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        400,
+        336
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "kXJ2rHgxOaeS9NPP",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "البحت عن المطلوب\n",
+        "height": 448,
+        "width": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        208,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "77203972-1bea-425b-af32-9d8fffac5b8c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "مقارنة الاسعار",
+        "height": 432,
+        "width": 288,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "e643c9aa-39c7-41ac-bdc7-5be1ae818d81",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "كتابة التقرير النهائي",
+        "height": 432,
+        "width": 304,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        880,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "290ecf03-8613-4eb5-9302-59c9c0cc5f3d",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "output\n",
+        "height": 192,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1216,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "74920bf2-d95e-49a3-bcc4-159879cf85b1",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "input",
+        "height": 192,
+        "width": 208,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "a7b37fca-6e72-45d9-9eaa-2b225cfaec2d",
+      "name": "Sticky Note4"
+    }
+  ],
+  "connections": {
+    "استقبال اسم المنتج": {
+      "main": [
+        [
+          {
+            "node": "وكيل البحث",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "وكيل البحث": {
+      "main": [
+        [
+          {
+            "node": "وكيل المقارنة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "نموذج وكيل البحث": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "وكيل البحث",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "وكيل المقارنة": {
+      "main": [
+        [
+          {
+            "node": "وكيل التقرير",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "نموذج وكيل المقارنة": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "وكيل المقارنة",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "وكيل التقرير": {
+      "main": [
+        [
+          {
+            "node": "إرسال التقرير",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "نموذج وكيل التقرير": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "وكيل التقرير",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "أداة بحث تافيلي": {
+      "ai_tool": [
+        [
+          {
+            "node": "وكيل البحث",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5bfad6d88a2b5945840d0e64ca0275a5b6c7e4f3a16ac5114454aeec4f206da"
+  }
+}
