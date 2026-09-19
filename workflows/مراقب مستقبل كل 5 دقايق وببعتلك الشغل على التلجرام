@@ -1,0 +1,386 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "8b8d6e3f-9f16-4e33-8501-62dfe11d7912",
+      "name": "كل 5 دقائق",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/abdulwhab95~mostaql-projects-monitor/runs",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "حط هان التوكن "
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"categories\": [\"development\"],\n  \"keywords\": [\"n8n\",\"make\",\"zapier\",\"أتمتة\",\"automation\",\"تكامل\",\"workflows\",\"ربط\",\"integration\",\"ربط تطبيقات\",\"APIs\",\"أتمتة الأعمال\",\"low code\"],\n  \"onlyNew\": true,\n  \"maxProjects\": 20\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "83d81b4c-838d-4678-bad8-17c1cc70f23d",
+      "name": "شغّل Actor على Apify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 45
+      },
+      "id": "2c6246d2-0847-4bd9-b699-b4a7f02973fd",
+      "name": "انتظر 45 ثانية",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        240
+      ],
+      "webhookId": "5c63081d-cddf-431f-80dd-a3dc085fc807"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.apify.com/v2/actor-runs/{{ $('شغّل Actor على Apify').item.json.data.id }}/dataset/items",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "حط التوكن"
+            },
+            {
+              "name": "clean",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "40737694-6caa-4dbe-976e-831d55075775",
+      "name": "اجلب المشاريع الجديدة",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst strongAuto = ['n8n','make.com','zapier','أتمتة الأعمال','أتمتة العمليات','automation workflow','أتمتة سير العمل','apify','workflow automation','لوكود','نوكود','no code','low-code','n8n workflow','أتمتة مهام'];\nconst exclude = ['أندرويد','ios','flutter','react native','تطبيق الهاتف','تطبيق موبايل','تجارة إلكترونية','android','mobile app','تطبيق جوال','متجر إلكتروني','تطبيق','ووردبريس','wordpress','تصميم شعار','logo'];\n\nconst filtered = items\n  .map(i => i.json)\n  .filter(obj => {\n    const text = ((obj.title||'') + ' ' + (obj.description||'') + ' ' + (Array.isArray(obj.skills)?obj.skills.join(' '):obj.skills||'')).toLowerCase();\n    const isBad = exclude.some(k => text.includes(k.toLowerCase()));\n    if (isBad) return false;\n    return strongAuto.some(k => text.includes(k.toLowerCase()));\n  });\n\nreturn filtered.map(json => ({ json }));"
+      },
+      "id": "8ad81eb3-cfdf-4de2-9024-fe04c560e697",
+      "name": "فك المصفوفة",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.changeType }}",
+              "rightValue": "NEW",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6e9a1929-fd5c-4d56-8ec4-795ea4bc0322",
+      "name": "فلتر: مشاريع جديدة فقط",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        400,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7c4adee0-3a8a-4adc-9a1f-7febe186531d",
+      "name": "فلتر: تجاهل الفارغ",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        560,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "message",
+              "value": "=🆕 مشروع جديد على مستقل!\n\n📌 {{ $json.title }}\n\n📝 {{ ($json.description || '').toString().slice(0, 200) }}{{ ($json.description || '').toString().length > 200 ? '...' : '' }}\n\n💰 الميزانية: {{ $json.budgetMin || '-' }} - {{ $json.budgetMax || '-' }} {{ $json.currency || '' }}\n\n🏷️ الفئة: {{ $json.category || '-' }}\n🔧 المهارات: {{ Array.isArray($json.skills) ? $json.skills.join(', ') : ($json.skills || '-') }}\n👥 عدد العروض: {{ $json.bidsCount || 0 }}\n🕐 نُشر: {{ $json.publishedAt || '-' }}\n\n🔗 {{ $json.url || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e26255ed-57c4-4944-99d0-2db62ec44949",
+      "name": "تنسيق الرسالة",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "الشات id الخاص بلتلجرام",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "0716b693-2840-4db7-9ad2-385ab970359f",
+      "name": "إرسال تيليجرام",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        448
+      ],
+      "webhookId": "914040d4-c284-4927-a3bc-2767819c35a0",
+      "credentials": {
+        "telegramApi": {
+          "id": "cNHOI5ZOd9hRPoZC",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "يشتغل كل 5 دقايق \n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -160,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "2d16f570-90a2-4271-9615-042cc31c2182",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "يربط حسابك مع ابيفي عشان يجيب المشاريع",
+        "height": 208,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        96,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "5f60714a-ded0-411d-8ffe-dac91caff498",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "انتظار 45 تانية عشان كل المشاريع تصل\n",
+        "height": 176,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "cd9c484b-cfe5-44b0-b595-43206f0feff3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "تجهيز النتائج",
+        "height": 192,
+        "width": 752,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        144,
+        448
+      ],
+      "typeVersion": 1,
+      "id": "07b7d4bb-c26c-4147-a954-366bc4fd3915",
+      "name": "Sticky Note3"
+    }
+  ],
+  "connections": {
+    "كل 5 دقائق": {
+      "main": [
+        [
+          {
+            "node": "شغّل Actor على Apify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "شغّل Actor على Apify": {
+      "main": [
+        [
+          {
+            "node": "انتظر 45 ثانية",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "انتظر 45 ثانية": {
+      "main": [
+        [
+          {
+            "node": "اجلب المشاريع الجديدة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "اجلب المشاريع الجديدة": {
+      "main": [
+        [
+          {
+            "node": "فك المصفوفة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "فك المصفوفة": {
+      "main": [
+        [
+          {
+            "node": "فلتر: مشاريع جديدة فقط",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "فلتر: مشاريع جديدة فقط": {
+      "main": [
+        [
+          {
+            "node": "فلتر: تجاهل الفارغ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "فلتر: تجاهل الفارغ": {
+      "main": [
+        [
+          {
+            "node": "تنسيق الرسالة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تنسيق الرسالة": {
+      "main": [
+        [
+          {
+            "node": "إرسال تيليجرام",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "797152b3a2d96a3db67839ac61457299798b4236783a1882acf692d88ce2ca5f"
+  }
+}
