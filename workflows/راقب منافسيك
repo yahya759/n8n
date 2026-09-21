@@ -1,0 +1,550 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## قبل التشغيل\n1. جدول seen_reels موجود فعليًا على Supabase (تم إنشاؤه) وموصول عبر Credential 'Supabase account' في نودز 'فحص Supabase' و 'Create a row'\n2. افتح نود 'مفتاح Apify' وحط مفتاح الـ API بتاعك مكان النص التوضيحي\n3. تأكد إن نود 'Message a model' فيه Credential OpenAI صحيح، ومظبوط على Resource=Image / Operation=Analyze Image / Model=gpt-4o\n4. نود 'إرسال لتيليجرام' موصول أصلاً بحسابك\n5. عدّل قائمة الحسابات في نود 'قائمة الحسابات'\n6. جرب الفلو يدويًا (Execute Workflow) على حساب واحد قبل ما تفعّل الـ Schedule على كل الـ 10",
+        "height": 340,
+        "width": 660
+      },
+      "id": "f25e9eb2-44cb-49cb-b081-8549afb77724",
+      "name": "تعليمات الإعداد",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6016,
+        2544
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "22adede9-c2dc-4146-8ee3-7925a593cbde",
+      "name": "كل 15 دقيقة",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        6016,
+        2928
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "apify-key-1",
+              "name": "apify_token",
+              "type": "string",
+              "value": "حط هان ال apify_token"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c8169346-2502-4013-954f-8a2b25c6cdba",
+      "name": "مفتاح Apify",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6240,
+        3136
+      ],
+      "notes": "بدل ما تحتاج Environment Variable، حط قيمة الـ Token هون مباشرة. من Apify Console > Settings > Integrations."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "acc-1",
+              "name": "accounts",
+              "type": "array",
+              "value": "=[\"nick_saraev\",\"leadgenman\",\"automatewithmarko\",\"theaiagents\",\"thekeshavkrishnan\",\"liamjohnston.ai\",\"riano_digitals\",\"farhannrakhangi\",\"tenfoldmarc\",\"adamstewartmarketing\"]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e23353e2-47e4-4dfc-9c6b-fc0e745a9868",
+      "name": "قائمة الحسابات",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6240,
+        2928
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const accounts = $input.first().json.accounts;\nreturn accounts.map(username => ({ json: { username } }));"
+      },
+      "id": "73055ec9-9aa9-4b54-8643-59567484f226",
+      "name": "تقسيم الحسابات",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6464,
+        2928
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "d2015e79-69f5-4e2f-8a3b-3c7f8d8d0119",
+      "name": "تكرار على كل حساب",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6688,
+        2928
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.apify.com/v2/acts/apify~instagram-reel-scraper/run-sync-get-dataset-items?token={{$('مفتاح Apify').first().json.apify_token}}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"username\": [$json.username], \"resultsLimit\": 3 } }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c2a38845-1486-4e24-a8cb-e7ae1b0d2f5a",
+      "name": "Apify - جلب آخر Reel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6928,
+        2816
+      ],
+      "notes": "لو Apify Actor اللي بتستخدمه اسمه مختلف، غيّر الرابط. تأكد إن الـ Actor بيرجع newest-first."
+    },
+    {
+      "parameters": {
+        "jsCode": "const reels = $input.all();\nif (!reels.length) {\n  return [];\n}\nconst latest = reels[0].json;\nreturn [{\n  json: {\n    username: latest.ownerUsername || latest.username || $('تكرار على كل حساب').first().json.username,\n    reel_id: String(latest.id || latest.shortCode || latest.url),\n    url: latest.url,\n    caption: latest.caption || '',\n    thumbnail: latest.displayUrl || latest.thumbnailUrl || latest.imageUrl,\n    timestamp: latest.timestamp\n  }\n}];"
+      },
+      "id": "d1fa6c30-cdf0-4821-9e97-7f30f4b43b4a",
+      "name": "استخراج بيانات الـ Reel",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7136,
+        2816
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "seen_reels",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "reel_id",
+              "condition": "eq",
+              "keyValue": "={{$json.reel_id}}"
+            }
+          ]
+        }
+      },
+      "id": "11b06049-8ee1-46ac-801b-fa9b1665f10c",
+      "name": "فحص Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        7360,
+        2816
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "LZJv23iIx3u6F98y",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const seenRows = $input.all().filter(item => item.json && item.json.reel_id);\nconst reel = $('استخراج بيانات الـ Reel').first().json;\nreturn [{ json: { ...reel, isNew: seenRows.length === 0 } }];"
+      },
+      "id": "022da78e-2696-4ff6-912f-971610d9c568",
+      "name": "تحديد إذا جديد",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7584,
+        2816
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{$json.isNew}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a86190aa-4123-401b-bb2a-f07b9f7f0408",
+      "name": "جديد؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        7808,
+        2816
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{ json: { ...item, account: item.username, seen_at: new Date().toISOString() } }];"
+      },
+      "id": "3fdde8fe-748b-4fdd-8824-c337d1d54253",
+      "name": "تجهيز بيانات Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8032,
+        2656
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "seen_reels",
+        "dataToSend": "autoMapInputData",
+        "inputsToIgnore": "username, url, caption, isNew, thumbnail, timestamp"
+      },
+      "id": "144d73b2-9e3e-4638-9402-a043296f6132",
+      "name": "Create a row",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        8256,
+        2656
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "LZJv23iIx3u6F98y",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "gpt-4o"
+        },
+        "text": "=حلل الصورة المصغرة لهذا الريلز من حساب @{{$('تجهيز بيانات Supabase').item.json.username}} (الكابشن: {{$('تجهيز بيانات Supabase').item.json.caption || 'بدون'}}). أعطني بالعربي وباختصار: 1) نوع المحتوى ونمط الهوك المستخدم 2) ليش هذا النوع بينجح 3) فكرة جاهزة أقدر أطبقها بأسلوبي الخاص.",
+        "imageUrls": "={{$('تجهيز بيانات Supabase').item.json.thumbnail}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        8480,
+        2656
+      ],
+      "id": "b03c8be2-47c7-47db-97a2-44a392dc23d5",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      },
+      "notes": "لو الحقول ما طلعت متطابقة تلقائيًا بعد الاستيراد: افتح النود واختار يدويًا Resource=Image, Operation=Analyze Image, Model=gpt-4o, Input Type=Image URL(s)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const reel = $('تجهيز بيانات Supabase').first().json;\nconst gptRaw = $input.first().json;\nconst gpt = Array.isArray(gptRaw) ? gptRaw[0] : gptRaw;\nconst analysis = gpt?.content?.[0]?.text || gpt?.text || gpt?.choices?.[0]?.message?.content || 'تعذر التحليل';\nconst text = `🎯 ريلز جديد من @${reel.username}\\n\\n${analysis}\\n\\n🔗 ${reel.url}`;\nreturn [{ json: { text } }];"
+      },
+      "id": "3d15b956-2594-4a71-b2b1-c04e3c06d7c6",
+      "name": "تنسيق الرسالة",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8704,
+        2656
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "حط هان ال تلجرام id",
+        "text": "={{$json.text}}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "ee4694b5-c415-4d3d-bac7-d5843a7f4e04",
+      "name": "إرسال لتيليجرام",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        8912,
+        2656
+      ],
+      "webhookId": "32d59a15-29c6-43ab-8bac-41116513dccf",
+      "credentials": {
+        "telegramApi": {
+          "id": "cNHOI5ZOd9hRPoZC",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "b24ad887-b7dd-4c73-a413-8bd719dd0c61",
+      "name": "تم رؤيته سابقاً",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        8048,
+        2944
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "507346b1-dc7f-4347-a1de-dbd08cdf37ed",
+      "name": "انتهت الدورة",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        6928,
+        3088
+      ]
+    }
+  ],
+  "connections": {
+    "كل 15 دقيقة": {
+      "main": [
+        [
+          {
+            "node": "مفتاح Apify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "مفتاح Apify": {
+      "main": [
+        [
+          {
+            "node": "قائمة الحسابات",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "قائمة الحسابات": {
+      "main": [
+        [
+          {
+            "node": "تقسيم الحسابات",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تقسيم الحسابات": {
+      "main": [
+        [
+          {
+            "node": "تكرار على كل حساب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تكرار على كل حساب": {
+      "main": [
+        [
+          {
+            "node": "انتهت الدورة",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Apify - جلب آخر Reel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify - جلب آخر Reel": {
+      "main": [
+        [
+          {
+            "node": "استخراج بيانات الـ Reel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "استخراج بيانات الـ Reel": {
+      "main": [
+        [
+          {
+            "node": "فحص Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "فحص Supabase": {
+      "main": [
+        [
+          {
+            "node": "تحديد إذا جديد",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تحديد إذا جديد": {
+      "main": [
+        [
+          {
+            "node": "جديد؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "جديد؟": {
+      "main": [
+        [
+          {
+            "node": "تجهيز بيانات Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "تم رؤيته سابقاً",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تجهيز بيانات Supabase": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "تنسيق الرسالة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تنسيق الرسالة": {
+      "main": [
+        [
+          {
+            "node": "إرسال لتيليجرام",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "إرسال لتيليجرام": {
+      "main": [
+        [
+          {
+            "node": "تكرار على كل حساب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تم رؤيته سابقاً": {
+      "main": [
+        [
+          {
+            "node": "تكرار على كل حساب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "797152b3a2d96a3db67839ac61457299798b4236783a1882acf692d88ce2ca5f"
+  }
+}
